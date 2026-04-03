@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Registro</h1>
+
+    <form id="registerForm">
+        <input type="text" id="name" placeholder="Nombre" required><br><br>
+        <input type="email" id="email" placeholder="Email" required><br><br>
+        <input type="password" id="password" placeholder="Contraseña" required><br><br>
+        <button type="submit">Registrarse</button>
+    </form>
+
+    <p id="response"></p>
+
+    <a href="/static/index.html">Volver al login</a>
+
+    <script>
+        document.getElementById("registerForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const data = {
+                name: document.getElementById("name").value,
+                email: document.getElementById("email").value,
+                password: document.getElementById("password").value
+            };
+
+            const response = await fetch("http://127.0.0.1:8000/users/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                document.getElementById("response").innerText =
+                    "Error: " + result.detail;
+                return;
+            }
+
+            // 🔥 GUARDAR USUARIO AQUÍ (BIEN)
+            localStorage.setItem("user", JSON.stringify(result.user));
+
+            document.getElementById("response").innerText =
+                "Usuario registrado ✅";
+
+            setTimeout(() => {
+                window.location.href = "/static/onboarding.html";
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

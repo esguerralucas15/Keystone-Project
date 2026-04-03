@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+</head>
+
+<body>
+    <h1>Bienvenido <span id="username"></span></h1>
+
+    <p id="status"></p>
+
+    <button onclick="logout()">Cerrar sesión</button>
+
+    <script>
+        // 🔐 usuario
+        const user = JSON.parse(localStorage.getItem("user"));
+
+        // 🚨 si no hay usuario → login
+        if (!user) {
+            window.location.href = "/static/index.html";
+        }
+
+        // 👤 mostrar nombre
+        if (user) {
+            document.getElementById("username").innerText = user.name;
+        }
+
+        // 📊 estado
+        document.getElementById("status").innerText =
+            "Tu perfil financiero ha sido registrado correctamente ✅";
+
+        // 🧠 debug
+        console.log("Usuario:", user);
+
+        // 🔓 logout
+        function logout() {
+            localStorage.removeItem("user");
+            window.location.href = "/static/index.html";
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Encuesta de Educación Financiera</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Encuesta de Educación Financiera</h1>
+
+        <form id="onboardingForm">
+
+            <h2>Conocimiento Financiero</h2>
+
+            <!-- Preguntas 1 - 17 -->
+
+            <!-- Función para reutilizar estructura mental: pX -->
+
+            <!-- 1 -->
+            <div class="question">
+                <p>1. Si guardas dinero en casa, ¿pierde valor con el tiempo?</p>
+                <label><input type="radio" name="q1" value="si" required> Sí</label>
+                <label><input type="radio" name="q1" value="no"> No</label>
+                <label><input type="radio" name="q1" value="no_sabe"> No sé</label>
+            </div>
+
+            <!-- 2 -->
+            <div class="question">
+                <p>2. Si una deuda tiene intereses, significa que:</p>
+                <label><input type="radio" name="q2" value="paga_mas" required> Pagas más dinero del que pediste</label>
+                <label><input type="radio" name="q2" value="igual"> Pagas lo mismo</label>
+                <label><input type="radio" name="q2" value="no_sabe"> No sé</label>
+            </div>
+
+            <!-- 3 -->
+            <div class="question">
+                <p>3. ¿Qué es ahorrar?</p>
+                <label><input type="radio" name="q3" value="guardar" required> Guardar dinero para el futuro</label>
+                <label><input type="radio" name="q3" value="gastar_menos"> Gastar menos</label>
+                <label><input type="radio" name="q3" value="no_sabe"> No sé</label>
+            </div>
+
+            <!-- 4 -->
+            <div class="question">
+                <p>4. ¿Qué es una tasa de interés?</p>
+                <label><input type="radio" name="q4" value="costo_credito" required> El costo de pedir dinero prestado</label>
+                <label><input type="radio" name="q4" value="tipo_ahorro"> Un tipo de ahorro</label>
+                <label><input type="radio" name="q4" value="no_sabe"> No sé</label>
+            </div>
+
+            <!-- 5 -->
+            <div class="question">
+                <p>5. ¿Es recomendable endeudarse sin saber si puedes pagar?</p>
+                <label><input type="radio" name="q5" value="si" required> Sí</label>
+                <label><input type="radio" name="q5" value="no"> No</label>
+                <label><input type="radio" name="q5" value="depende"> Depende</label>
+            </div>
+
+            <!-- 6 -->
+            <div class="question">
+                <p>6. Estrategia para pagar deudas:</p>
+                <label><input type="radio" name="q6" value="igual" required> Pagar todas por igual</label>
+                <label><input type="radio" name="q6" value="grande"> Enfocarse en la más grande</label>
+                <label><input type="radio" name="q6" value="interes"> Mayor tasa de interés primero</label>
+                <label><input type="radio" name="q6" value="unificar"> Unificar en nuevo crédito</label>
+            </div>
+
+            <!-- 7 -->
+            <div class="question">
+                <p>7. Inflación:</p>
+                <label><input type="radio" name="q7" value="sueldos" required> Aumento de sueldos</label>
+                <label><input type="radio" name="q7" value="precios"> Subida de precios</label>
+                <label><input type="radio" name="q7" value="comision"> Comisión bancaria</label>
+                <label><input type="radio" name="q7" value="impuesto"> Impuesto</label>
+            </div>
+
+            <!-- 8 -->
+            <div class="question">
+                <p>8. Uso total tarjeta afecta historial:</p>
+                <label><input type="radio" name="q8" value="si" required> Sí</label>
+                <label><input type="radio" name="q8" value="no"> No</label>
+            </div>
+
+            <!-- 9 -->
+            <div class="question">
+                <p>9. Uso del límite de tarjeta:</p>
+                <label><input type="radio" name="q9" value="si" required> Sí</label>
+                <label><input type="radio" name="q9" value="no"> No afecta</label>
+                <label><input type="radio" name="q9" value="depende_pago"> Solo si no pagas</label>
+                <label><input type="radio" name="q9" value="depende_banco"> Depende del banco</label>
+            </div>
+
+            <!-- 10 -->
+            <div class="question">
+                <p>10. Diversificación:</p>
+                <label><input type="radio" name="q10" value="una" required> Una sola inversión</label>
+                <label><input type="radio" name="q10" value="diversificar"> Diversificar inversiones</label>
+                <label><input type="radio" name="q10" value="acciones"> Solo acciones grandes</label>
+                <label><input type="radio" name="q10" value="efectivo"> Guardar efectivo</label>
+            </div>
+
+            <h2>Hábitos y Perfil</h2>
+
+            <!-- 11 -->
+            <div class="question">
+                <p>11. Control de gastos:</p>
+                <label><input type="radio" name="q11" value="nunca" required> Nunca</label>
+                <label><input type="radio" name="q11" value="a_veces"> A veces</label>
+                <label><input type="radio" name="q11" value="casi_siempre"> Casi siempre</label>
+                <label><input type="radio" name="q11" value="siempre"> Siempre</label>
+            </div>
+
+            <!-- 12 -->
+            <div class="question">
+                <p>12. Ahorros:</p>
+                <label><input type="radio" name="q12" value="ahorros_y_fondo" required> Ahorros y fondo</label>
+                <label><input type="radio" name="q12" value="solo_ahorros"> Solo ahorros</label>
+                <label><input type="radio" name="q12" value="no_tiene"> No tiene</label>
+                <label><input type="radio" name="q12" value="creando"> Creando fondo</label>
+            </div>
+
+            <!-- 13 -->
+            <div class="question">
+                <p>13. Gastos inesperados:</p>
+                <label><input type="radio" name="q13" value="ahorros" required> Ahorros</label>
+                <label><input type="radio" name="q13" value="prestado"> Prestado</label>
+                <label><input type="radio" name="q13" value="tarjeta"> Tarjeta</label>
+                <label><input type="radio" name="q13" value="deuda"> No puede cubrir</label>
+            </div>
+
+            <!-- 14 -->
+            <div class="question">
+                <p>14. Fuente de ingresos:</p>
+                <label><input type="radio" name="q14" value="empleo" required> Empleo formal</label>
+                <label><input type="radio" name="q14" value="freelance"> Freelance</label>
+                <label><input type="radio" name="q14" value="negocio"> Negocio propio</label>
+                <label><input type="radio" name="q14" value="apoyo"> Apoyo familiar</label>
+            </div>
+
+            <!-- 15 -->
+            <div class="question">
+                <p>15. Edad:</p>
+                <label><input type="radio" name="q15" value="18_25" required> 18–25</label>
+                <label><input type="radio" name="q15" value="26_35"> 26–35</label>
+                <label><input type="radio" name="q15" value="36_45"> 36–45</label>
+                <label><input type="radio" name="q15" value="46_mas"> 46+</label>
+            </div>
+
+            <!-- 16 -->
+            <div class="question">
+                <p>16. Nivel educativo:</p>
+                <label><input type="radio" name="q16" value="basica" required> Primaria/secundaria</label>
+                <label><input type="radio" name="q16" value="bachillerato"> Bachillerato</label>
+                <label><input type="radio" name="q16" value="universidad"> Universidad</label>
+                <label><input type="radio" name="q16" value="posgrado"> Posgrado</label>
+            </div>
+
+            <!-- 17 -->
+            <div class="question">
+                <p>17. Ingresos mensuales:</p>
+                <label><input type="radio" name="q17" value="menos_5k" required> Menos de $5,000</label>
+                <label><input type="radio" name="q17" value="5k_10k"> $5,000 - $10,000</label>
+                <label><input type="radio" name="q17" value="10k_20k"> $10,000 - $20,000</label>
+                <label><input type="radio" name="q17" value="mas_20k"> Más de $20,000</label>
+            </div>
+
+            <button type="submit">Enviar respuestas</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById("onboardingForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            const user = JSON.parse(localStorage.getItem("user"));
+
+            if (!user) {
+                alert("No hay usuario logueado");
+                window.location.href = "/static/index.html";
+                return;
+            }
+
+            const data = {
+                q1: document.querySelector('input[name="q1"]:checked')?.value,
+                q2: document.querySelector('input[name="q2"]:checked')?.value,
+                q3: document.querySelector('input[name="q3"]:checked')?.value,
+                q4: document.querySelector('input[name="q4"]:checked')?.value,
+                q5: document.querySelector('input[name="q5"]:checked')?.value,
+                q6: document.querySelector('input[name="q6"]:checked')?.value,
+                q7: document.querySelector('input[name="q7"]:checked')?.value,
+                q8: document.querySelector('input[name="q8"]:checked')?.value,
+                q9: document.querySelector('input[name="q9"]:checked')?.value,
+                q10: document.querySelector('input[name="q10"]:checked')?.value,
+                q11: document.querySelector('input[name="q11"]:checked')?.value,
+                q12: document.querySelector('input[name="q12"]:checked')?.value,
+                q13: document.querySelector('input[name="q13"]:checked')?.value,
+                q14: document.querySelector('input[name="q14"]:checked')?.value,
+                q15: document.querySelector('input[name="q15"]:checked')?.value,
+                q16: document.querySelector('input[name="q16"]:checked')?.value,
+                q17: document.querySelector('input[name="q17"]:checked')?.value
+            };
+
+            // 🔥 VALIDACIÓN EXTRA
+            if (Object.values(data).includes(undefined)) {
+                alert("Responde todas las preguntas");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/users/onboarding/${user.id}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    alert("Error: " + result.detail);
+                    return;
+                }
+
+                // 🔥 guardar estado
+                localStorage.setItem("onboarding", "true");
+
+                // 🚀 dashboard
+                window.location.href = "/static/dashboard.html";
+
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        });
+    </script>
+</body>
+</html>
