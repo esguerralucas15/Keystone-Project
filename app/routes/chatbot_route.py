@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.database.database import SessionLocal
 from app.models.user_model import User
 from app.models.profile_model import UserProfile
-from app.llm.google_llm import generate_reply
+from app.llm.google_llm_new import generate_reply
 
 router = APIRouter()
 
