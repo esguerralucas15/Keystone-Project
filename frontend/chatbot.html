@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chatbot - EquiFinance</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 24px auto; }
+    #chat { border: 1px solid #ddd; padding: 12px; border-radius: 6px; }
+    .msg { padding: 8px; margin: 6px 0; border-radius: 6px; }
+    .user { background:#e6f7ff; align-self:flex-end; }
+    .bot { background:#fff7e6; }
+    #messages { display:flex; flex-direction:column; }
+    #controls { margin-top:8px; display:flex; gap:8px; }
+    textarea { width:100%; height:80px; }
+  </style>
+</head>
+<body>
+  <h2>Chatbot EquiFinance</h2>
+
+  <div id="chat">
+    <label for="user-select">Usuario:</label>
+    <select id="user-select"></select>
+
+    <div id="messages"></div>
+
+    <div id="controls">
+      <textarea id="message" placeholder="Escribe tu mensaje aquí..."></textarea>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button id="send">Enviar</button>
+        <button id="clear">Borrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const messagesEl = document.getElementById('messages');
+    const userSelect = document.getElementById('user-select');
+
+    function addMessage(text, cls){
+      const d = document.createElement('div');
+      d.className = 'msg ' + cls;
+      d.textContent = text;
+      messagesEl.appendChild(d);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    async function loadUsers(){
+      try{
+        const res = await fetch('/users/');
+        const users = await res.json();
+        users.forEach(u => {
+          const opt = document.createElement('option');
+          opt.value = u.id; opt.textContent = u.name || (`ID ${u.id}`);
+          userSelect.appendChild(opt);
+        });
+      }catch(e){
+        console.error(e); addMessage('No se pudieron cargar usuarios', 'bot');
+      }
+    }
+
+    document.getElementById('send').addEventListener('click', async ()=>{
+      const sendBtn = document.getElementById('send');
+      const user_id = parseInt(userSelect.value);
+      const message = document.getElementById('message').value.trim();
+      if(!user_id){ alert('Selecciona un usuario'); return; }
+      if(!message){ return; }
+      addMessage('Tú: ' + message, 'user');
+      document.getElementById('message').value = '';
+
+      sendBtn.disabled = true;
+      const prevText = sendBtn.textContent;
+      sendBtn.textContent = 'Enviando...';
+
+      try{
+        const res = await fetch('/chatbot/message', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ user_id, message })
+        });
+        let data;
+        try { data = await res.json(); } catch(e){ data = { reply: 'Respuesta no JSON del servidor' }; }
+        if(res.ok){
+          addMessage('Bot: ' + (data.reply || JSON.stringify(data)), 'bot');
+        } else {
+          // mostrar error detallado si existe
+          const errText = data?.detail ? JSON.stringify(data.detail) : (data?.reply || JSON.stringify(data));
+          addMessage('Bot: ' + errText, 'bot');
+        }
+      }catch(e){
+        console.error(e); addMessage('Error al contactar al servidor', 'bot');
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.textContent = prevText;
+      }
+    });
+
+    document.getElementById('clear').addEventListener('click', ()=>{ messagesEl.innerHTML = ''; });
+
+    window.addEventListener('load', loadUsers);
+  </script>
+</body>
+</html>

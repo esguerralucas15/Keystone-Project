@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from app.routes import user_route
+from app.routes import chatbot_route
 from app.database.database import engine, Base
 from app.models.user_model import User
 from app.models.profile_model import UserProfile
@@ -23,6 +24,7 @@ app.add_middleware(
 Base.metadata.create_all(bind=engine)
 
 app.include_router(user_route.router, prefix="/users")
+app.include_router(chatbot_route.router, prefix="/chatbot")
 
 @app.get("/api")
 def root():
@@ -31,5 +33,11 @@ def root():
 @app.get("/", response_class=HTMLResponse)
 def serve_home():
     with open("frontend/index.html", "r", encoding="utf-8") as file:
+        return file.read()
+    
+
+@app.get("/chat", response_class=HTMLResponse)
+def serve_chat():
+    with open("frontend/chatbot.html", "r", encoding="utf-8") as file:
         return file.read()
     
