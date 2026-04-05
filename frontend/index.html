@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+</head>
+
+<body>
+
+    <h1>Login</h1>
+
+    <form id="loginForm">
+        <input type="email" id="loginEmail" placeholder="Email" required><br><br>
+        <input type="password" id="loginPassword" placeholder="Contraseña" required><br><br>
+        <button type="submit">Iniciar sesión</button>
+    </form>
+
+    <p id="loginResponse"></p>
+
+    <a href="/static/register.html">Ir a registro</a>
+
+    <script>
+        document.getElementById("loginForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const data = {
+                email: document.getElementById("loginEmail").value,
+                password: document.getElementById("loginPassword").value
+            };
+
+            const response = await fetch("http://127.0.0.1:8000/users/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                alert("Error: " + result.detail);
+                return;
+            }
+
+            localStorage.setItem("user", JSON.stringify(result.user));
+
+            console.log("Usuario guardado:", result.user);
+
+            if (result.user.has_profile) {
+                window.location.href = "/static/dashboard.html";
+            } else {
+                window.location.href = "/static/onboarding.html";
+            }
+        });
+    </script>
+
+</body>
+</html>
