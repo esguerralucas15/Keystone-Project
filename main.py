@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from app.routes import user_route
 from app.routes import chatbot_route
+from app.routes import simulator_route
 from app.database.database import engine, Base
 from app.models.user_model import User
 from app.models.profile_model import UserProfile
@@ -25,6 +26,7 @@ Base.metadata.create_all(bind=engine)
 
 app.include_router(user_route.router, prefix="/users")
 app.include_router(chatbot_route.router, prefix="/chatbot")
+app.include_router(simulator_route.router, prefix="/simulator")
 
 @app.get("/api")
 def root():

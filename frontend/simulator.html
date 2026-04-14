@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simulador de Crédito - EquiFinance</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Arial', sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { 
+      max-width: 900px; 
+      margin: 0 auto; 
+      background: white; 
+      border-radius: 10px; 
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+    .header { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 { font-size: 28px; }
+    .back-btn { 
+      background: rgba(255,255,255,0.2); 
+      color: white; 
+      border: 2px solid white;
+      padding: 10px 20px; 
+      border-radius: 5px; 
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .back-btn:hover { background: white; color: #667eea; }
+    
+    .content { padding: 40px; }
+    
+    .section { margin-bottom: 40px; }
+    .section h2 { 
+      font-size: 20px; 
+      color: #333; 
+      margin-bottom: 20px;
+      border-bottom: 3px solid #667eea;
+      padding-bottom: 10px;
+    }
+    
+    .form-group { margin-bottom: 20px; }
+    label { 
+      display: block; 
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+      transition: border 0.3s;
+    }
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 5px;
+      background: #667eea;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+    button:hover { background: #5568d3; transform: translateY(-2px); }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    button.secondary { background: #6c757d; }
+    button.secondary:hover { background: #5a6268; }
+    
+    .ruta-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    .ruta-card {
+      padding: 20px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+    }
+    .ruta-card:hover { border-color: #667eea; background: #f8f9ff; }
+    .ruta-card.active { 
+      border-color: #667eea; 
+      background: #f0f3ff;
+      box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+    }
+    .ruta-card h3 { color: #667eea; margin-bottom: 10px; }
+    .ruta-card p { font-size: 13px; color: #666; }
+    
+    .resultado {
+      background: #f0f3ff;
+      padding: 30px;
+      border-radius: 8px;
+      border-left: 5px solid #667eea;
+    }
+    .resultado h3 { color: #333; margin-bottom: 20px; }
+    
+    .resultado-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    .resultado-item {
+      background: white;
+      padding: 15px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    .resultado-item label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+    .resultado-item .valor {
+      font-size: 20px;
+      font-weight: bold;
+      color: #667eea;
+    }
+    
+    .alerta {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      color: #856404;
+    }
+    .alerta.error {
+      background: #f8d7da;
+      border-color: #f5c6cb;
+      color: #721c24;
+    }
+    .alerta.success {
+      background: #d4edda;
+      border-color: #c3e6cb;
+      color: #155724;
+    }
+    
+    .tabla-amortizacion {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      font-size: 13px;
+    }
+    .tabla-amortizacion th {
+      background: #667eea;
+      color: white;
+      padding: 12px;
+      text-align: left;
+      font-weight: bold;
+    }
+    .tabla-amortizacion td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #ddd;
+    }
+    .tabla-amortizacion tr:hover { background: #f5f5f5; }
+    
+    .hidden { display: none; }
+    
+    .loader {
+      display: inline-block;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      margin-left: 10px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🏦 Simulador de Crédito</h1>
+      <button class="back-btn" onclick="window.location.href='/static/dashboard.html'">← Volver</button>
+    </div>
+
+    <div class="content">
+      <!-- SELECCIÓN DE TASA -->
+      <div class="section">
+        <h2>Paso 1: Tasa de Interés</h2>
+        
+        <div class="form-group">
+          <label>Elige un banco o ingresa tu propia tasa</label>
+          <select id="banco-select" onchange="cambiarBanco()">
+            <option value="">-- Selecciona un banco --</option>
+          </select>
+        </div>
+
+        <div id="info-banco" class="form-group hidden">
+          <div id="banco-detalle"></div>
+        </div>
+
+        <div class="form-group hidden" id="tasa-manual-group">
+          <label>Ingresa la tasa mensual vencida (%)</label>
+          <input type="number" id="tasa-manual" placeholder="Ej: 1.75" step="0.01" min="0">
+        </div>
+
+        <div id="alerta-tasa" class="alerta hidden"></div>
+
+        <button onclick="confirmarTasa()" style="width: 100%;">Confirmar Tasa</button>
+      </div>
+
+      <!-- SELECCIÓN DE RUTA -->
+      <div class="section hidden" id="ruta-section">
+        <h2>Paso 2: ¿Qué deseas simular?</h2>
+        
+        <div class="ruta-selector">
+          <div class="ruta-card" onclick="seleccionarRuta('A')">
+            <h3>📊 Ruta A</h3>
+            <p>Sé exactamente cuánto dinero necesito</p>
+          </div>
+          <div class="ruta-card" onclick="seleccionarRuta('B')">
+            <h3>💰 Ruta B</h3>
+            <p>No sé el monto, pero sé cuánto puedo pagar</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- RUTA A - DATOS -->
+      <div class="section hidden" id="ruta-a-section">
+        <h2>Paso 3: Ingresa los datos del crédito</h2>
+        
+        <div class="form-group">
+          <label>Monto que necesitas (COP)</label>
+          <input type="number" id="monto-a" placeholder="Ej: 5000000" min="500000" step="100000">
+        </div>
+
+        <div class="form-group">
+          <label>Tipo de crédito</label>
+          <select id="tipo-a">
+            <option value="">-- Selecciona un tipo --</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Plazo (meses)</label>
+          <input type="number" id="plazo-a" placeholder="Ej: 48" min="12" step="1">
+        </div>
+
+        <button onclick="simularRutaA()" style="width: 100%;">Simular Crédito</button>
+      </div>
+
+      <!-- RUTA B - DATOS -->
+      <div class="section hidden" id="ruta-b-section">
+        <h2>Paso 3: Ingresa los datos del crédito</h2>
+        
+        <div class="form-group">
+          <label>Cuota mensual máxima que puedo pagar (COP)</label>
+          <input type="number" id="cuota-b" placeholder="Ej: 150000" min="10000" step="10000">
+        </div>
+
+        <div class="form-group">
+          <label>Tipo de crédito</label>
+          <select id="tipo-b">
+            <option value="">-- Selecciona un tipo --</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Plazo (meses)</label>
+          <input type="number" id="plazo-b" placeholder="Ej: 48" min="12" step="1">
+        </div>
+
+        <button onclick="simularRutaB()" style="width: 100%;">Simular Crédito</button>
+      </div>
+
+      <!-- RESULTADOS -->
+      <div class="section hidden" id="resultados-section">
+        <h2>📈 Resultados de la Simulación</h2>
+        
+        <div id="alerta-usura" class="alerta hidden"></div>
+
+        <div class="resultado">
+          <h3 id="resultado-titulo"></h3>
+          <div class="resultado-grid" id="resultado-grid"></div>
+        </div>
+
+        <div style="margin-top: 20px;">
+          <button onclick="verAmortizacion()" class="secondary">Ver Tabla de Amortización</button>
+          <button onclick="volverAlInicio()" class="secondary">Nueva Simulación</button>
+        </div>
+
+        <div id="tabla-section" class="hidden" style="margin-top: 30px;">
+          <h3>Tabla de Amortización</h3>
+          <div style="overflow-x: auto;">
+            <table class="tabla-amortizacion" id="tabla-amortizacion"></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Estado global
+    const estado = {
+      tasa_mensual: null,
+      banco_id: null,
+      ruta: null,
+      ultimo_resultado: null,
+    };
+
+    // Cargar bancos al iniciar
+    cargarBancos();
+
+    async function cargarBancos() {
+      try {
+        const res = await fetch('/simulator/bancos');
+        const data = await res.json();
+        
+        const select = document.getElementById('banco-select');
+        data.bancos.forEach(banco => {
+          const option = document.createElement('option');
+          option.value = banco.id;
+          option.textContent = `${banco.nombre} (${banco.tasa_ref}% MV)`;
+          select.appendChild(option);
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function cargarTiposCredito() {
+      try {
+        const res = await fetch('/simulator/tipos');
+        const data = await res.json();
+        
+        const selectA = document.getElementById('tipo-a');
+        const selectB = document.getElementById('tipo-b');
+        
+        for (const [id, tipo] of Object.entries(data.tipos)) {
+          const option1 = document.createElement('option');
+          option1.value = id;
+          option1.textContent = tipo.nombre;
+          selectA.appendChild(option1);
+          
+          const option2 = document.createElement('option');
+          option2.value = id;
+          option2.textContent = tipo.nombre;
+          selectB.appendChild(option2);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function cambiarBanco() {
+      const bancoId = document.getElementById('banco-select').value;
+      const infoDiv = document.getElementById('info-banco');
+      const tasaManualGroup = document.getElementById('tasa-manual-group');
+
+      if (bancoId === '') {
+        infoDiv.classList.add('hidden');
+        tasaManualGroup.classList.add('hidden');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/simulator/bancos/${bancoId}`);
+        const banco = await res.json();
+
+        const html = `
+          <div style="background: white; padding: 15px; border-radius: 5px;">
+            <h4>${banco.nombre}</h4>
+            <p><strong>Tasa Referencial:</strong> ${banco.tasa_ref}% MV (${banco.tea_ref}% E.A.)</p>
+            <p><strong>Rango:</strong> ${banco.tasa_min}% - ${banco.tasa_max}%</p>
+            <p><strong>Nota:</strong> ${banco.nota}</p>
+          </div>
+        `;
+        document.getElementById('banco-detalle').innerHTML = html;
+        infoDiv.classList.remove('hidden');
+        
+        estado.banco_id = bancoId;
+        estado.tasa_mensual = banco.tasa_ref;
+        
+        tasaManualGroup.classList.add('hidden');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function confirmarTasa() {
+      if (!estado.tasa_mensual) {
+        alert('Por favor selecciona un banco o ingresa una tasa');
+        return;
+      }
+
+      document.getElementById('ruta-section').classList.remove('hidden');
+      cargarTiposCredito();
+      document.querySelector('html').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function seleccionarRuta(ruta) {
+      estado.ruta = ruta;
+      
+      document.querySelectorAll('.ruta-card').forEach(card => card.classList.remove('active'));
+      event.target.closest('.ruta-card').classList.add('active');
+
+      document.getElementById('ruta-a-section').classList.add('hidden');
+      document.getElementById('ruta-b-section').classList.add('hidden');
+
+      if (ruta === 'A') {
+        document.getElementById('ruta-a-section').classList.remove('hidden');
+      } else {
+        document.getElementById('ruta-b-section').classList.remove('hidden');
+      }
+
+      setTimeout(() => {
+        document.getElementById('ruta-a-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+
+    async function simularRutaA() {
+      const capital = parseFloat(document.getElementById('monto-a').value);
+      const tipo = parseInt(document.getElementById('tipo-a').value);
+      const plazo = parseInt(document.getElementById('plazo-a').value);
+
+      if (!capital || !tipo || !plazo) {
+        alert('Por favor completa todos los campos');
+        return;
+      }
+
+      try {
+        const res = await fetch('/simulator/simular/ruta-a', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            capital,
+            tipo,
+            plazo,
+            tasa_mensual: estado.tasa_mensual
+          })
+        });
+
+        const resultado = await res.json();
+
+        if (resultado.error) {
+          alert('Error: ' + resultado.error);
+          return;
+        }
+
+        estado.ultimo_resultado = resultado;
+        mostrarResultados(resultado);
+      } catch (e) {
+        console.error(e);
+        alert('Error en la simulación');
+      }
+    }
+
+    async function simularRutaB() {
+      const cuota = parseFloat(document.getElementById('cuota-b').value);
+      const tipo = parseInt(document.getElementById('tipo-b').value);
+      const plazo = parseInt(document.getElementById('plazo-b').value);
+
+      if (!cuota || !tipo || !plazo) {
+        alert('Por favor completa todos los campos');
+        return;
+      }
+
+      try {
+        const res = await fetch('/simulator/simular/ruta-b', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            cuota_mensual: cuota,
+            tipo,
+            plazo,
+            tasa_mensual: estado.tasa_mensual
+          })
+        });
+
+        const resultado = await res.json();
+
+        if (resultado.error) {
+          alert('Error: ' + resultado.error);
+          return;
+        }
+
+        estado.ultimo_resultado = resultado;
+        mostrarResultados(resultado);
+      } catch (e) {
+        console.error(e);
+        alert('Error en la simulación');
+      }
+    }
+
+    function formatMoney(value) {
+      return new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 0,
+      }).format(value);
+    }
+
+    function mostrarResultados(resultado) {
+      document.getElementById('resultados-section').classList.remove('hidden');
+      
+      const titulo = resultado.ruta === 'A' 
+        ? `Crédito de ${formatMoney(resultado.capital)}`
+        : `Crédito con cuota de ${formatMoney(resultado.cuota_mensual)}`;
+      
+      document.getElementById('resultado-titulo').textContent = titulo;
+
+      const items = [
+        { label: 'Capital', valor: resultado.capital },
+        { label: 'Plazo', valor: resultado.plazo + ' meses' },
+        { label: 'Tasa Mensual', valor: resultado.tasa_mensual + '% MV' },
+        { label: 'TEA', valor: resultado.tea.toFixed(2) + '%' },
+        { label: '💳 Cuota Mensual', valor: formatMoney(resultado.cuota_mensual) },
+        { label: 'Total a Pagar', valor: formatMoney(resultado.total_pago) },
+        { label: 'Total Intereses', valor: formatMoney(resultado.total_interes) },
+        { label: 'Seguro Estimado', valor: formatMoney(resultado.seguro_estimado) },
+        { label: 'CTC Estimado', valor: formatMoney(resultado.ctc) },
+      ];
+
+      let html = '';
+      items.forEach(item => {
+        html += `
+          <div class="resultado-item">
+            <label>${item.label}</label>
+            <div class="valor">${typeof item.valor === 'string' ? item.valor : formatMoney(item.valor)}</div>
+          </div>
+        `;
+      });
+
+      document.getElementById('resultado-grid').innerHTML = html;
+
+      // Mostrar alerta de usura si aplica
+      const alertaDiv = document.getElementById('alerta-usura');
+      if (resultado.alerta_usura) {
+        alertaDiv.classList.remove('hidden');
+        alertaDiv.classList.add('error');
+        alertaDiv.innerHTML = `⚠️ <strong>ALERTA:</strong> La tasa ${resultado.tasa_mensual}% supera la tasa de usura vigente (${resultado.tasa_usura}% mensual). Este crédito no sería legal en Colombia.`;
+      } else {
+        alertaDiv.classList.add('hidden');
+      }
+
+      document.querySelector('html').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    async function verAmortizacion() {
+      if (!estado.ultimo_resultado) return;
+
+      const res = await fetch('/simulator/amortizacion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          capital: estado.ultimo_resultado.capital,
+          tasa_mensual: estado.ultimo_resultado.tasa_mensual,
+          plazo: estado.ultimo_resultado.plazo,
+          cuota_mensual: estado.ultimo_resultado.cuota_mensual
+        })
+      });
+
+      const data = await res.json();
+      
+      let html = `
+        <thead>
+          <tr>
+            <th>Mes</th>
+            <th>Saldo Inicial</th>
+            <th>Interés</th>
+            <th>Abono Capital</th>
+            <th>Seguro</th>
+            <th>Cuota Total</th>
+            <th>Saldo Final</th>
+          </tr>
+        </thead>
+        <tbody>
+      `;
+
+      data.tabla.forEach(fila => {
+        html += `
+          <tr>
+            <td>${fila.mes}</td>
+            <td>${formatMoney(fila.saldo_inicial)}</td>
+            <td>${formatMoney(fila.interes)}</td>
+            <td>${formatMoney(fila.abono_capital)}</td>
+            <td>${formatMoney(fila.seguro)}</td>
+            <td>${formatMoney(fila.cuota_total)}</td>
+            <td>${formatMoney(fila.saldo_final)}</td>
+          </tr>
+        `;
+      });
+
+      html += '</tbody>';
+      document.getElementById('tabla-amortizacion').innerHTML = html;
+      document.getElementById('tabla-section').classList.remove('hidden');
+
+      document.getElementById('tabla-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function volverAlInicio() {
+      estado.ruta = null;
+      estado.ultimo_resultado = null;
+      
+      document.getElementById('ruta-section').classList.add('hidden');
+      document.getElementById('ruta-a-section').classList.add('hidden');
+      document.getElementById('ruta-b-section').classList.add('hidden');
+      document.getElementById('resultados-section').classList.add('hidden');
+      document.getElementById('tabla-section').classList.add('hidden');
+      document.querySelectorAll('.ruta-card').forEach(card => card.classList.remove('active'));
+
+      document.querySelector('html').scrollIntoView({ behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>

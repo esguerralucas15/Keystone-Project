@@ -12,6 +12,8 @@
         button { padding: 10px 20px; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; transition: all 0.3s; }
         .btn-chatbot { background: #667eea; color: white; }
         .btn-chatbot:hover { background: #5568d3; }
+        .btn-simulator { background: #f39c12; color: white; }
+        .btn-simulator:hover { background: #e67e22; }
         .btn-logout { background: #e74c3c; color: white; }
         .btn-logout:hover { background: #c0392b; }
     </style>
@@ -25,6 +27,7 @@
 
         <div class="buttons">
             <button class="btn-chatbot" onclick="irAlChatbot()">💬 Asesor Financiero</button>
+            <button class="btn-simulator" onclick="irAlSimulador()">🏦 Simulador de Crédito</button>
             <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
         </div>
     </div>
@@ -53,6 +56,11 @@
         // 💬 ir al chatbot
         function irAlChatbot() {
             window.location.href = "/static/chatbot.html";
+        }
+
+        // 🏦 ir al simulador
+        function irAlSimulador() {
+            window.location.href = "/static/simulator.html";
         }
 
         // 🔓 logout
