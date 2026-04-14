@@ -2,24 +2,159 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - EquiFinance</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        .logo p {
+            color: #999;
+            font-size: 14px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-family: Arial, sans-serif;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 8px rgba(102, 126, 234, 0.2);
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .link-group {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .link-group p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .link-group a {
+            display: inline-block;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+            padding: 10px 0;
+            transition: color 0.3s;
+        }
+        .link-group a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+        #loginResponse {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            display: none;
+            font-size: 14px;
+        }
+        #loginResponse.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        #loginResponse.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+    </style>
 </head>
-
 <body>
+    <div class="container">
+        <div class="logo">
+            <h1>💰 EquiFinance</h1>
+            <p>Tu asesor financiero digital</p>
+        </div>
 
-    <h1>Login</h1>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="loginEmail">Correo electrónico</label>
+                <input type="email" id="loginEmail" placeholder="tu@email.com" required>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Contraseña</label>
+                <input type="password" id="loginPassword" placeholder="••••••••" required>
+            </div>
+            <button type="submit">Iniciar sesión</button>
+        </form>
 
-    <form id="loginForm">
-        <input type="email" id="loginEmail" placeholder="Email" required><br><br>
-        <input type="password" id="loginPassword" placeholder="Contraseña" required><br><br>
-        <button type="submit">Iniciar sesión</button>
-    </form>
+        <div id="loginResponse"></div>
 
-    <p id="loginResponse"></p>
-
-    <a href="/static/register.html">Ir a registro</a>
+        <div class="link-group">
+            <p>¿No tienes cuenta?</p>
+            <a href="/static/register.html">Crear una cuenta →</a>
+        </div>
+    </div>
 
     <script>
+        const responseEl = document.getElementById("loginResponse");
+
         document.getElementById("loginForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
@@ -28,32 +163,41 @@
                 password: document.getElementById("loginPassword").value
             };
 
-            const response = await fetch("http://127.0.0.1:8000/users/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(data)
-            });
+            try {
+                const response = await fetch("http://127.0.0.1:8000/users/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
 
-            const result = await response.json();
+                const result = await response.json();
 
-            if (!response.ok) {
-                alert("Error: " + result.detail);
-                return;
-            }
+                if (!response.ok) {
+                    responseEl.className = "error";
+                    responseEl.textContent = "❌ Error: " + result.detail;
+                    return;
+                }
 
-            localStorage.setItem("user", JSON.stringify(result.user));
+                localStorage.setItem("user", JSON.stringify(result.user));
+                responseEl.className = "success";
+                responseEl.textContent = "✅ Iniciando sesión...";
 
-            console.log("Usuario guardado:", result.user);
+                setTimeout(() => {
+                    if (result.user.has_profile) {
+                        window.location.href = "/static/dashboard.html";
+                    } else {
+                        window.location.href = "/static/onboarding.html";
+                    }
+                }, 500);
 
-            if (result.user.has_profile) {
-                window.location.href = "/static/dashboard.html";
-            } else {
-                window.location.href = "/static/onboarding.html";
+            } catch (error) {
+                responseEl.className = "error";
+                responseEl.textContent = "❌ Error de conexión";
+                console.error(error);
             }
         });
     </script>
-
 </body>
 </html>
