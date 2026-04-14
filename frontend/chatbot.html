@@ -5,37 +5,98 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Chatbot - EquiFinance</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: 24px auto; }
-    #chat { border: 1px solid #ddd; padding: 12px; border-radius: 6px; }
-    .msg { padding: 8px; margin: 6px 0; border-radius: 6px; }
-    .user { background:#e6f7ff; align-self:flex-end; }
-    .bot { background:#fff7e6; }
-    #messages { display:flex; flex-direction:column; }
-    #controls { margin-top:8px; display:flex; gap:8px; }
-    textarea { width:100%; height:80px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: Arial, sans-serif; 
+      max-width: 900px; 
+      margin: 20px auto; 
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    h2 { color: #333; }
+    .back-btn { background: #667eea; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; }
+    .back-btn:hover { background: #5568d3; }
+    #chat { 
+      background: white; 
+      border: 1px solid #ddd; 
+      padding: 12px; 
+      border-radius: 6px; 
+      display: flex;
+      flex-direction: column;
+      height: 500px;
+    }
+    .user-info { background: #e6f7ff; padding: 12px; border-radius: 4px; margin-bottom: 12px; font-size: 14px; }
+    .msg { padding: 8px 12px; margin: 6px 0; border-radius: 6px; max-width: 80%; word-wrap: break-word; }
+    .user { background: #e6f7ff; align-self: flex-end; }
+    .bot { background: #fff7e6; align-self: flex-start; }
+    #messages { 
+      display: flex; 
+      flex-direction: column; 
+      overflow-y: auto;
+      flex: 1;
+      margin-bottom: 12px;
+    }
+    #controls { 
+      display: flex; 
+      gap: 8px;
+      border-top: 1px solid #ddd;
+      padding-top: 12px;
+    }
+    textarea { 
+      flex: 1; 
+      height: 60px; 
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: Arial;
+    }
+    button { 
+      padding: 10px 16px; 
+      border: none; 
+      border-radius: 4px; 
+      background: #667eea;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    button:hover { background: #5568d3; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
   </style>
 </head>
 <body>
-  <h2>Chatbot EquiFinance</h2>
+  <div class="header">
+    <h2>💬 Asesor Financiero EquiFinance</h2>
+    <button class="back-btn" onclick="window.location.href='/static/dashboard.html'">← Volver</button>
+  </div>
 
   <div id="chat">
-    <label for="user-select">Usuario:</label>
-    <select id="user-select"></select>
-
+    <div class="user-info">
+      👤 Usuario: <strong id="user-name"></strong> | 📧 <span id="user-email"></span>
+    </div>
     <div id="messages"></div>
-
     <div id="controls">
-      <textarea id="message" placeholder="Escribe tu mensaje aquí..."></textarea>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <button id="send">Enviar</button>
-        <button id="clear">Borrar</button>
-      </div>
+      <textarea id="message" placeholder="Escribe tu pregunta financiera..."></textarea>
+      <button id="send">Enviar</button>
     </div>
   </div>
 
   <script>
     const messagesEl = document.getElementById('messages');
-    const userSelect = document.getElementById('user-select');
+    
+    // 🔐 usuario del localStorage
+    const user = JSON.parse(localStorage.getItem("user"));
+    
+    // 🚨 si no hay usuario → login
+    if (!user) {
+      window.location.href = "/static/index.html";
+    }
+    
+    // 👤 mostrar usuario
+    if (user) {
+      document.getElementById("user-name").innerText = user.name;
+      document.getElementById("user-email").innerText = user.email;
+    }
 
     function addMessage(text, cls){
       const d = document.createElement('div');
@@ -45,26 +106,51 @@
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
-    async function loadUsers(){
-      try{
-        const res = await fetch('/users/');
-        const users = await res.json();
-        users.forEach(u => {
-          const opt = document.createElement('option');
-          opt.value = u.id; opt.textContent = u.name || (`ID ${u.id}`);
-          userSelect.appendChild(opt);
-        });
-      }catch(e){
-        console.error(e); addMessage('No se pudieron cargar usuarios', 'bot');
+    // 🎯 Cargar recomendación inicial si es la primera vez
+    async function loadInitialRecommendation() {
+      const visitKey = `chatbot_visited_${user.id}`;
+      const hasVisited = localStorage.getItem(visitKey);
+      
+      if (!hasVisited) {
+        addMessage('👋 Generando tu recomendación inicial...', 'bot');
+        
+        try {
+          const res = await fetch('/chatbot/initial-recommendation', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ user_id: user.id })
+          });
+          
+          const data = await res.json();
+          
+          if (res.ok) {
+            addMessage('📊 ' + (data.recommendation || 'Desculpa, no se pudo generar la recomendación'), 'bot');
+          } else {
+            addMessage('⚠️ ' + (data.detail || 'No se pudo cargar la recomendación'), 'bot');
+          }
+        } catch (e) {
+          console.error(e);
+          addMessage('❌ Error al cargar la recomendación inicial', 'bot');
+        }
+        
+        // Marcar como visitado
+        localStorage.setItem(visitKey, 'true');
       }
     }
+    
+    // Ejecutar cuando carga la página
+    loadInitialRecommendation();
 
     document.getElementById('send').addEventListener('click', async ()=>{
       const sendBtn = document.getElementById('send');
-      const user_id = parseInt(userSelect.value);
+      const user_id = user.id;
       const message = document.getElementById('message').value.trim();
-      if(!user_id){ alert('Selecciona un usuario'); return; }
-      if(!message){ return; }
+      
+      if(!message){ 
+        addMessage('Por favor escribe un mensaje', 'bot');
+        return; 
+      }
+      
       addMessage('Tú: ' + message, 'user');
       document.getElementById('message').value = '';
 
@@ -74,29 +160,47 @@
 
       try{
         const res = await fetch('/chatbot/message', {
-          method: 'POST', headers: {'Content-Type':'application/json'},
+          method: 'POST', 
+          headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({ user_id, message })
         });
+        
         let data;
-        try { data = await res.json(); } catch(e){ data = { reply: 'Respuesta no JSON del servidor' }; }
+        try { 
+          data = await res.json(); 
+        } catch(e){ 
+          data = { reply: 'Error: Respuesta inválida del servidor' }; 
+        }
+        
         if(res.ok){
-          addMessage('Bot: ' + (data.reply || JSON.stringify(data)), 'bot');
+          addMessage('🤖 Asesor: ' + (data.reply || 'No se generó respuesta'), 'bot');
         } else {
-          // mostrar error detallado si existe
-          const errText = data?.detail ? JSON.stringify(data.detail) : (data?.reply || JSON.stringify(data));
-          addMessage('Bot: ' + errText, 'bot');
+          const errMsg = data?.detail || data?.reply || 'Error desconocido';
+          addMessage('❌ Error: ' + errMsg, 'bot');
         }
       }catch(e){
-        console.error(e); addMessage('Error al contactar al servidor', 'bot');
+        console.error(e); 
+        addMessage('❌ Error al contactar al servidor: ' + e.message, 'bot');
       } finally {
         sendBtn.disabled = false;
         sendBtn.textContent = prevText;
       }
     });
+    
+    // Enviar al presionar Enter
+    document.getElementById('message').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById('send').click();
+      }
+    });
 
-    document.getElementById('clear').addEventListener('click', ()=>{ messagesEl.innerHTML = ''; });
-
-    window.addEventListener('load', loadUsers);
+    // Mensaje inicial
+    window.addEventListener('load', () => {
+      addMessage('👋 Hola ' + user.name + ', soy tu asesor financiero digital. ¿En qué puedo ayudarte hoy?', 'bot');
+    });
   </script>
+</body>
+</html>
 </body>
 </html>

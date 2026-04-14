@@ -25,7 +25,6 @@ class UserProfile(Base):
     q14 = Column(String)
     q15 = Column(String)
     q16 = Column(String)
-    q17 = Column(String)
 
     # 🔗 relación inversa (CLAVE)
     user = relationship("User", back_populates="profile")

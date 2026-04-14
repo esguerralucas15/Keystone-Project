@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.database.database import SessionLocal
 from app.models.user_model import User
 from app.models.profile_model import UserProfile
-from app.llm.google_llm_new import generate_reply
+from app.llm.google_llm_new import procesar_mensaje_chatbot, generar_recomendacion_inicial
 
 router = APIRouter()
 
@@ -18,55 +18,122 @@ def get_db():
 
 @router.post("/message")
 def chatbot_message(payload: dict, db: Session = Depends(get_db)):
-    """Recibe { user_id, message } y devuelve los datos del usuario + respuesta del LLM."""
+    """
+    Endpoint para procesar mensajes del chatbot.
+    Recibe { user_id, message } y devuelve respuesta del asesor financiero.
+    
+    Flujo:
+    1. Validar user_id
+    2. Obtener datos del usuario y perfil de BD
+    3. Procesar mensaje con el módulo LLM
+    4. Retornar respuesta
+    """
     user_id = payload.get("user_id")
-    message = payload.get("message", "")
+    message = payload.get("message", "").strip()
 
     if user_id is None:
         raise HTTPException(status_code=400, detail="user_id es requerido")
 
+    # Obtener usuario de BD
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
+    # Obtener perfil financiero
     profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
 
+    # Datos del usuario
     user_data = {"id": user.id, "name": user.name, "email": user.email}
 
+    # Datos del perfil (si existen)
     profile_data = {}
     if profile:
-        profile_data = {c.name: getattr(profile, c.name) for c in profile.__table__.columns if c.name not in ("id", "user_id")}
+        profile_data = {
+            c.name: getattr(profile, c.name) 
+            for c in profile.__table__.columns 
+            if c.name not in ("id", "user_id")
+        }
 
     try:
-        reply = generate_reply(user_data, profile_data, message)
+        # Procesar mensaje
+        resultado = procesar_mensaje_chatbot(user_id, message, user_data, profile_data)
+        
+        if resultado.get("error"):
+            raise HTTPException(status_code=400, detail=resultado["error"])
+        
+        return {
+            "input": {
+                "user": user_data,
+                "profile": profile_data,
+                "message": message
+            },
+            "reply": resultado.get("reply")
+        }
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-    return {"input": {"user": user_data, "profile": profile_data, "message": message}, "reply": reply}
+        raise HTTPException(status_code=500, detail=f"Error procesando mensaje: {str(e)}")
 
 
-@router.get('/debug')
+@router.post("/initial-recommendation")
+def chatbot_initial_recommendation(payload: dict, db: Session = Depends(get_db)):
+    """
+    Endpoint para generar la recomendación inicial cuando el usuario entra al chatbot por primera vez.
+    Recibe { user_id } y devuelve recomendación personalizada basada en su perfil.
+    
+    Flujo:
+    1. Validar user_id
+    2. Obtener datos del usuario y perfil de BD
+    3. Generar recomendación inicial con IA
+    4. Retornar recomendación
+    """
+    user_id = payload.get("user_id")
+
+    if user_id is None:
+        raise HTTPException(status_code=400, detail="user_id es requerido")
+
+    # Obtener usuario de BD
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    # Obtener perfil financiero
+    profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
+    
+    if not profile:
+        raise HTTPException(status_code=404, detail="Perfil financiero no encontrado. Por favor completa la encuesta de onboarding.")
+
+    # Datos del usuario
+    user_data = {"id": user.id, "name": user.name, "email": user.email}
+
+    # Datos del perfil
+    profile_data = {
+        c.name: getattr(profile, c.name) 
+        for c in profile.__table__.columns 
+        if c.name not in ("id", "user_id")
+    }
+
+    try:
+        # Generar recomendación inicial
+        recomendacion = generar_recomendacion_inicial(profile_data, user_data)
+        
+        return {
+            "user": user_data,
+            "recommendation": recomendacion
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generando recomendación: {str(e)}")
+
+
+@router.get("/debug")
 def chatbot_debug():
-    import sys, importlib
-    info = {"sys_executable": sys.executable}
-    try:
-        mod = importlib.import_module('app.llm.google_llm')
-        info['google_llm_module'] = getattr(mod, '__file__', None)
-        info['ChatGoogleGenerativeAI'] = str(getattr(mod, 'ChatGoogleGenerativeAI', None))
-        info['_import_error'] = getattr(mod, '_import_error', None)
-    except Exception as e:
-        info['google_llm_module_error'] = str(e)
-
-    try:
-        import langchain_google_genai as lg
-        info['langchain_google_genai'] = getattr(lg, '__file__', None)
-    except Exception as e:
-        info['langchain_google_genai_error'] = str(e)
-
-    try:
-        from langchain_core.messages import HumanMessage
-        info['langchain_core_messages'] = 'ok'
-    except Exception as e:
-        info['langchain_core_messages_error'] = str(e)
-
+    """Endpoint de debug para verificar estado del chatbot."""
+    import sys
+    info = {
+        "sys_executable": sys.executable,
+        "status": "ok",
+        "chatbot_available": True
+    }
     return info

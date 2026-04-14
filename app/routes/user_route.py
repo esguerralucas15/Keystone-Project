@@ -93,8 +93,7 @@ def save_profile(user_id: int, profile: ProfileSchema, db: Session = Depends(get
         q13=profile.q13,
         q14=profile.q14,
         q15=profile.q15,
-        q16=profile.q16,
-        q17=profile.q17
+        q16=profile.q16
     )
 
     db.add(new_profile)

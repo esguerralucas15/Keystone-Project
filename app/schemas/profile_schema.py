@@ -17,4 +17,3 @@ class ProfileSchema(BaseModel):
     q14: str
     q15: str
     q16: str
-    q17: str
