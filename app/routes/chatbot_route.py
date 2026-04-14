@@ -3,7 +3,9 @@ from sqlalchemy.orm import Session
 from app.database.database import SessionLocal
 from app.models.user_model import User
 from app.models.profile_model import UserProfile
+from app.models.conversation_model import ConversationMessage
 from app.llm.google_llm_new import procesar_mensaje_chatbot, generar_recomendacion_inicial
+from datetime import datetime
 
 router = APIRouter()
 
@@ -25,8 +27,10 @@ def chatbot_message(payload: dict, db: Session = Depends(get_db)):
     Flujo:
     1. Validar user_id
     2. Obtener datos del usuario y perfil de BD
-    3. Procesar mensaje con el módulo LLM
-    4. Retornar respuesta
+    3. Recuperar historial de conversación anterior
+    4. Procesar mensaje con el módulo LLM (considerando el historial)
+    5. Guardar mensaje del usuario y respuesta en el historial
+    6. Retornar respuesta
     """
     user_id = payload.get("user_id")
     message = payload.get("message", "").strip()
@@ -55,11 +59,45 @@ def chatbot_message(payload: dict, db: Session = Depends(get_db)):
         }
 
     try:
+        # Recuperar historial previo (últimas 10 interacciones)
+        historial_previo = db.query(ConversationMessage).filter(
+            ConversationMessage.user_id == user_id
+        ).order_by(ConversationMessage.created_at.desc()).limit(20).all()
+        
+        # Invertir para que esté en orden cronológico
+        historial_previo.reverse()
+        
+        # Convertir a formato esperado
+        historial_conversacion = [
+            {"role": msg.role, "content": msg.content}
+            for msg in historial_previo
+        ]
+
         # Procesar mensaje
-        resultado = procesar_mensaje_chatbot(user_id, message, user_data, profile_data)
+        resultado = procesar_mensaje_chatbot(user_id, message, user_data, profile_data, historial_conversacion)
         
         if resultado.get("error"):
             raise HTTPException(status_code=400, detail=resultado["error"])
+        
+        # Guardar mensaje del usuario en el historial
+        msg_usuario = ConversationMessage(
+            user_id=user_id,
+            role="user",
+            content=message,
+            created_at=datetime.utcnow()
+        )
+        db.add(msg_usuario)
+        db.commit()
+        
+        # Guardar respuesta del asistente en el historial
+        msg_asistente = ConversationMessage(
+            user_id=user_id,
+            role="assistant",
+            content=resultado.get("reply"),
+            created_at=datetime.utcnow()
+        )
+        db.add(msg_asistente)
+        db.commit()
         
         return {
             "input": {
@@ -86,7 +124,8 @@ def chatbot_initial_recommendation(payload: dict, db: Session = Depends(get_db))
     1. Validar user_id
     2. Obtener datos del usuario y perfil de BD
     3. Generar recomendación inicial con IA
-    4. Retornar recomendación
+    4. Guardar recomendación en el historial
+    5. Retornar recomendación
     """
     user_id = payload.get("user_id")
 
@@ -117,6 +156,16 @@ def chatbot_initial_recommendation(payload: dict, db: Session = Depends(get_db))
     try:
         # Generar recomendación inicial
         recomendacion = generar_recomendacion_inicial(profile_data, user_data)
+        
+        # Guardar recomendación en el historial de conversación
+        msg_recomendacion = ConversationMessage(
+            user_id=user_id,
+            role="assistant",
+            content=recomendacion,
+            created_at=datetime.utcnow()
+        )
+        db.add(msg_recomendacion)
+        db.commit()
         
         return {
             "user": user_data,

@@ -71,13 +71,14 @@ def analizar_usuario(data):
     }
 
 
-def generar_respuesta_ia(mensaje, perfil_data=None):
+def generar_respuesta_ia(mensaje, perfil_data=None, historial_conversacion=None):
     """
     Generar respuesta del LLM usando Google Gemini.
     
     Args:
         mensaje: str - Pregunta del usuario
         perfil_data: dict - Datos financieros del usuario (opcional)
+        historial_conversacion: list - Historial de mensajes anteriores [{role, content}, ...] (opcional)
         
     Returns:
         str - Respuesta del modelo
@@ -102,12 +103,24 @@ def generar_respuesta_ia(mensaje, perfil_data=None):
         history = []
         history.append(SystemMessage(content=SYSTEM_PROMPT))
         
-        # Agregar contexto financiero si existe
-        if perfil_data:
+        # Agregar contexto financiero si existe (solo una vez al inicio)
+        if perfil_data and (not historial_conversacion or len(historial_conversacion) == 0):
             context_msg = construir_input_usuario(perfil_data)
             history.append(HumanMessage(content=context_msg))
+            # Agregar un mensaje del asistente de confirmación
+            history.append(HumanMessage(content="Entendido. Tengo en cuenta tu información financiera. ¿Có mo puedo ayudarte?"))
         
-        # Agregar mensaje del usuario
+        # Agregar historial previo de la conversación
+        if historial_conversacion:
+            for msg in historial_conversacion:
+                role = msg.get('role', 'user')
+                content = msg.get('content', '')
+                if role == 'user':
+                    history.append(HumanMessage(content=content))
+                elif role == 'assistant':
+                    history.append(HumanMessage(content=f"Assistant: {content}"))
+        
+        # Agregar mensaje actual del usuario
         history.append(HumanMessage(content=mensaje))
         
         # Invocar modelo
@@ -197,7 +210,7 @@ def generar_recomendacion_inicial(profile_data, user_data=None):
     return generar_respuesta_ia(prompt_inicial, profile_data)
 
 
-def procesar_mensaje_chatbot(user_id, mensaje, user_data=None, profile_data=None):
+def procesar_mensaje_chatbot(user_id, mensaje, user_data=None, profile_data=None, historial_conversacion=None):
     """
     Función principal para procesar mensajes del chatbot.
     
@@ -206,6 +219,7 @@ def procesar_mensaje_chatbot(user_id, mensaje, user_data=None, profile_data=None
         mensaje: str - Mensaje del usuario
         user_data: dict - Datos del usuario (name, email, etc)
         profile_data: dict - Perfil financiero del usuario
+        historial_conversacion: list - Historial previo [{role, content}, ...]
         
     Returns:
         dict - Respuesta estructurada
@@ -220,7 +234,7 @@ def procesar_mensaje_chatbot(user_id, mensaje, user_data=None, profile_data=None
     
     # Generar respuesta
     try:
-        reply = generar_respuesta_ia(mensaje, profile_data)
+        reply = generar_respuesta_ia(mensaje, profile_data, historial_conversacion)
         
         return {
             "error": None,

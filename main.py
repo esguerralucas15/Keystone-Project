@@ -5,6 +5,7 @@ from app.routes import simulator_route
 from app.database.database import engine, Base
 from app.models.user_model import User
 from app.models.profile_model import UserProfile
+from app.models.conversation_model import ConversationMessage
 from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi.responses import HTMLResponse
