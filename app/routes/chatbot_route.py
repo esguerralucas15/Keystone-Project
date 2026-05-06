@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func
+from typing import Optional
 from app.database.database import SessionLocal
 from app.models.user_model import User
 from app.models.profile_model import UserProfile
-from app.models.conversation_model import ConversationMessage
+from app.models.conversation_model import ConversationMessage, ConversationSession
 from app.llm.google_llm_new import procesar_mensaje_chatbot, generar_recomendacion_inicial
 from datetime import datetime
 
@@ -16,6 +18,39 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def _serialize_message(message: ConversationMessage):
+    return {
+        "id": message.id,
+        "session_id": message.session_id,
+        "role": message.role,
+        "content": message.content,
+        "created_at": message.created_at.isoformat()
+    }
+
+
+def _serialize_session(session: ConversationSession, message_count=0, last_message_at=None):
+    return {
+        "id": session.id,
+        "title": session.title,
+        "created_at": session.created_at.isoformat(),
+        "message_count": message_count,
+        "last_message_at": last_message_at.isoformat() if last_message_at else None,
+    }
+
+
+def _create_session(db: Session, user_id: int, title: Optional[str] = None):
+    etiqueta = title or f"Chat {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+    session = ConversationSession(
+        user_id=user_id,
+        title=etiqueta,
+        created_at=datetime.now(),
+    )
+    db.add(session)
+    db.commit()
+    db.refresh(session)
+    return session
 
 
 @router.post("/message")
@@ -43,6 +78,8 @@ def chatbot_message(payload: dict, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
+    session_id = payload.get("session_id")
+
     # Obtener perfil financiero
     profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
 
@@ -59,9 +96,22 @@ def chatbot_message(payload: dict, db: Session = Depends(get_db)):
         }
 
     try:
-        # Recuperar historial previo (últimas 10 interacciones)
+        # Obtener o crear sesion
+        session = None
+        if session_id:
+            session = db.query(ConversationSession).filter(
+                ConversationSession.id == session_id,
+                ConversationSession.user_id == user_id,
+            ).first()
+            if not session:
+                raise HTTPException(status_code=404, detail="Sesion no encontrada")
+        else:
+            session = _create_session(db, user_id)
+
+        # Recuperar historial previo (ultimas interacciones de la sesion)
         historial_previo = db.query(ConversationMessage).filter(
-            ConversationMessage.user_id == user_id
+            ConversationMessage.user_id == user_id,
+            ConversationMessage.session_id == session.id,
         ).order_by(ConversationMessage.created_at.desc()).limit(20).all()
         
         # Invertir para que esté en orden cronológico
@@ -82,9 +132,10 @@ def chatbot_message(payload: dict, db: Session = Depends(get_db)):
         # Guardar mensaje del usuario en el historial
         msg_usuario = ConversationMessage(
             user_id=user_id,
+            session_id=session.id,
             role="user",
             content=message,
-            created_at=datetime.utcnow()
+            created_at=datetime.now()
         )
         db.add(msg_usuario)
         db.commit()
@@ -92,14 +143,16 @@ def chatbot_message(payload: dict, db: Session = Depends(get_db)):
         # Guardar respuesta del asistente en el historial
         msg_asistente = ConversationMessage(
             user_id=user_id,
+            session_id=session.id,
             role="assistant",
             content=resultado.get("reply"),
-            created_at=datetime.utcnow()
+            created_at=datetime.now()
         )
         db.add(msg_asistente)
         db.commit()
         
         return {
+            "session_id": session.id,
             "input": {
                 "user": user_data,
                 "profile": profile_data,
@@ -112,6 +165,9 @@ def chatbot_message(payload: dict, db: Session = Depends(get_db)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error procesando mensaje: {str(e)}")
+
+
+## NOTE: Old history endpoints removed in favor of session-based chat history.
 
 
 @router.post("/initial-recommendation")
@@ -137,6 +193,8 @@ def chatbot_initial_recommendation(payload: dict, db: Session = Depends(get_db))
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
+    session_id = payload.get("session_id")
+
     # Obtener perfil financiero
     profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
     
@@ -154,22 +212,51 @@ def chatbot_initial_recommendation(payload: dict, db: Session = Depends(get_db))
     }
 
     try:
-        # Generar recomendación inicial
+        # Obtener o crear sesion
+        session = None
+        if session_id:
+            session = db.query(ConversationSession).filter(
+                ConversationSession.id == session_id,
+                ConversationSession.user_id == user_id,
+            ).first()
+            if not session:
+                raise HTTPException(status_code=404, detail="Sesion no encontrada")
+        else:
+            session = _create_session(db, user_id, title="Chat inicial")
+
+        # Generar recomendacion inicial
         recomendacion = generar_recomendacion_inicial(profile_data, user_data)
+
+        follow_up = (
+            "Si quieres, puedes preguntarme sobre ahorro, presupuesto, credito o metas."
+        )
         
         # Guardar recomendación en el historial de conversación
         msg_recomendacion = ConversationMessage(
             user_id=user_id,
+            session_id=session.id,
             role="assistant",
             content=recomendacion,
-            created_at=datetime.utcnow()
+            created_at=datetime.now()
         )
         db.add(msg_recomendacion)
+        db.commit()
+
+        msg_follow_up = ConversationMessage(
+            user_id=user_id,
+            session_id=session.id,
+            role="assistant",
+            content=follow_up,
+            created_at=datetime.now()
+        )
+        db.add(msg_follow_up)
         db.commit()
         
         return {
             "user": user_data,
-            "recommendation": recomendacion
+            "session_id": session.id,
+            "recommendation": recomendacion,
+            "follow_up": follow_up,
         }
         
     except Exception as e:
@@ -186,3 +273,92 @@ def chatbot_debug():
         "chatbot_available": True
     }
     return info
+
+
+@router.post("/session")
+def chatbot_create_session(payload: dict, db: Session = Depends(get_db)):
+    user_id = payload.get("user_id")
+    title = payload.get("title")
+
+    if user_id is None:
+        raise HTTPException(status_code=400, detail="user_id es requerido")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    session = _create_session(db, user_id, title=title)
+    return {"session": _serialize_session(session)}
+
+
+@router.get("/sessions")
+def chatbot_sessions(user_id: int, db: Session = Depends(get_db)):
+    if user_id is None:
+        raise HTTPException(status_code=400, detail="user_id es requerido")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    rows = db.query(
+        ConversationSession,
+        func.count(ConversationMessage.id).label("count"),
+        func.max(ConversationMessage.created_at).label("last_message_at"),
+    ).outerjoin(
+        ConversationMessage,
+        ConversationMessage.session_id == ConversationSession.id,
+    ).filter(
+        ConversationSession.user_id == user_id
+    ).group_by(ConversationSession.id).order_by(ConversationSession.created_at.desc()).all()
+
+    sessions = [
+        _serialize_session(row[0], row[1], row[2])
+        for row in rows
+    ]
+
+    return {"user_id": user_id, "sessions": sessions}
+
+
+@router.get("/history")
+def chatbot_history(
+    user_id: int,
+    session_id: Optional[int] = None,
+    limit: int = 20,
+    db: Session = Depends(get_db),
+):
+    if user_id is None:
+        raise HTTPException(status_code=400, detail="user_id es requerido")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    if limit <= 0:
+        limit = 20
+
+    if session_id:
+        session = db.query(ConversationSession).filter(
+            ConversationSession.id == session_id,
+            ConversationSession.user_id == user_id,
+        ).first()
+        if not session:
+            raise HTTPException(status_code=404, detail="Sesion no encontrada")
+    else:
+        session = db.query(ConversationSession).filter(
+            ConversationSession.user_id == user_id,
+        ).order_by(ConversationSession.created_at.desc()).first()
+
+    if not session:
+        return {"user_id": user_id, "session_id": None, "messages": []}
+
+    mensajes = db.query(ConversationMessage).filter(
+        ConversationMessage.user_id == user_id,
+        ConversationMessage.session_id == session.id,
+    ).order_by(ConversationMessage.created_at.desc()).limit(limit).all()
+    mensajes.reverse()
+
+    return {
+        "user_id": user_id,
+        "session_id": session.id,
+        "messages": [_serialize_message(msg) for msg in mensajes],
+    }

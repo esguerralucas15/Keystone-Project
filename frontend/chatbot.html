@@ -5,164 +5,577 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Chatbot - EquiFinance</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
-      font-family: Arial, sans-serif; 
-      max-width: 900px; 
-      margin: 20px auto; 
-      background: #f5f5f5;
-      padding: 20px;
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&family=DM+Mono:wght@400&display=swap');
+
+    :root {
+      --bg: #0b0f14;
+      --panel: #111823;
+      --panel-2: #0d141f;
+      --border: #1f2a3a;
+      --text: #e6edf3;
+      --muted: #9aa7b2;
+      --accent: #38bdf8;
+      --accent-2: #0ea5e9;
+      --user: #1e293b;
+      --assistant: #0f172a;
+      --system: #0b1220;
     }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    h2 { color: #333; }
-    .back-btn { background: #667eea; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; }
-    .back-btn:hover { background: #5568d3; }
-    #chat { 
-      background: white; 
-      border: 1px solid #ddd; 
-      padding: 12px; 
-      border-radius: 6px; 
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+      background: radial-gradient(circle at top, #182235, #0b0f14 70%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 28px 20px 40px;
+    }
+
+    .app {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 16px;
+    }
+
+    .sidebar {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      height: 560px;
       display: flex;
       flex-direction: column;
-      height: 500px;
+      box-shadow: 0 20px 60px rgba(6, 12, 24, 0.45);
     }
-    .user-info { background: #e6f7ff; padding: 12px; border-radius: 4px; margin-bottom: 12px; font-size: 14px; }
-    .msg { padding: 8px 12px; margin: 6px 0; border-radius: 6px; max-width: 80%; word-wrap: break-word; }
-    .user { background: #e6f7ff; align-self: flex-end; }
-    .bot { background: #fff7e6; align-self: flex-start; }
-    #messages { 
-      display: flex; 
-      flex-direction: column; 
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      gap: 10px;
+    }
+
+    .sidebar-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .chat-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-right: 4px;
+    }
+
+    .chat-item {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text);
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .chat-item:hover {
+      border-color: var(--accent-2);
+      transform: translateY(-1px);
+    }
+
+    .chat-item.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.3);
+    }
+
+    .chat-item .meta {
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .sidebar-footer {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    h2 { font-size: 26px; font-weight: 600; }
+
+    .back-btn {
+      background: var(--accent);
+      color: #03101c;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 10px 20px rgba(15, 118, 221, 0.25);
+    }
+
+    .back-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(15, 118, 221, 0.35);
+    }
+
+    #chat {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 16px;
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      height: 560px;
+      box-shadow: 0 20px 60px rgba(6, 12, 24, 0.45);
+    }
+
+    .user-info {
+      background: var(--panel-2);
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      font-size: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .history-status { color: var(--muted); }
+
+    #messages {
+      display: flex;
+      flex-direction: column;
       overflow-y: auto;
       flex: 1;
       margin-bottom: 12px;
+      padding-right: 6px;
     }
-    #controls { 
-      display: flex; 
-      gap: 8px;
-      border-top: 1px solid #ddd;
+
+    .msg {
+      padding: 10px 14px;
+      margin: 6px 0;
+      border-radius: 12px;
+      max-width: 78%;
+      word-wrap: break-word;
+      line-height: 1.5;
+      border: 1px solid transparent;
+    }
+
+    .user { background: var(--user); align-self: flex-end; border-color: #22324c; }
+    .bot { background: var(--assistant); align-self: flex-start; border-color: #1c2b46; }
+    .system { background: var(--system); align-self: center; border-color: #22324c; color: var(--muted); font-size: 13px; }
+
+    #controls {
+      display: flex;
+      gap: 10px;
+      border-top: 1px solid var(--border);
       padding-top: 12px;
     }
-    textarea { 
-      flex: 1; 
-      height: 60px; 
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-family: Arial;
+
+    textarea {
+      flex: 1;
+      height: 70px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--system);
+      color: var(--text);
+      font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+      resize: none;
     }
-    button { 
-      padding: 10px 16px; 
-      border: none; 
-      border-radius: 4px; 
-      background: #667eea;
-      color: white;
+
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 10px;
+      background: var(--accent-2);
+      color: #03101c;
       cursor: pointer;
-      transition: all 0.3s;
+      font-weight: 600;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    button:hover { background: #5568d3; }
-    button:disabled { background: #ccc; cursor: not-allowed; }
+
+    button:hover { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(14, 165, 233, 0.35); }
+    button:disabled { background: #243142; cursor: not-allowed; box-shadow: none; }
+    button.secondary { background: #1f2937; color: var(--text); }
+    button.secondary:hover { box-shadow: 0 8px 18px rgba(15, 23, 42, 0.45); }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        height: auto;
+      }
+      #chat {
+        height: 70vh;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .msg { max-width: 90%; }
+    }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h2>💬 Asesor Financiero EquiFinance</h2>
-    <button class="back-btn" onclick="window.location.href='/static/dashboard.html'">← Volver</button>
-  </div>
-
-  <div id="chat">
-    <div class="user-info">
-      👤 Usuario: <strong id="user-name"></strong> | 📧 <span id="user-email"></span>
+  <div class="app">
+    <div class="header">
+      <h2>Asesor Financiero EquiFinance</h2>
+      <button class="back-btn" onclick="window.location.href='/static/dashboard.html'">← Volver</button>
     </div>
-    <div id="messages"></div>
-    <div id="controls">
-      <textarea id="message" placeholder="Escribe tu pregunta financiera..."></textarea>
-      <button id="send">Enviar</button>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-title">Chats</div>
+          <button id="new-session" class="secondary">Nuevo chat</button>
+        </div>
+        <div id="chat-list" class="chat-list"></div>
+        <div class="sidebar-footer" id="history-status"></div>
+      </aside>
+
+      <div id="chat">
+        <div class="user-info">
+          👤 Usuario: <strong id="user-name"></strong> | 📧 <span id="user-email"></span>
+        </div>
+        <div id="messages"></div>
+        <div id="controls">
+          <textarea id="message" placeholder="Escribe tu pregunta financiera..."></textarea>
+          <button id="send">Enviar</button>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
-    const messagesEl = document.getElementById('messages');
-    
     // 🔐 usuario del localStorage
-    const user = JSON.parse(localStorage.getItem("user"));
+    let user = null;
+    try {
+      const rawUser = localStorage.getItem("user");
+      user = rawUser ? JSON.parse(rawUser) : null;
+    } catch (e) {
+      user = null;
+    }
+
+    const messagesEl = document.getElementById('messages');
+    const chatListEl = document.getElementById('chat-list');
+    const historyStatus = document.getElementById('history-status');
+    const HISTORY_LIMIT = 40;
+    const ACTIVE_SESSION_KEY = user ? `chatbot_active_session_${user.id}` : 'chatbot_active_session';
+    const VISIT_KEY = user ? `chatbot_visited_${user.id}` : 'chatbot_visited';
+    let sessionsCache = [];
     
     // 🚨 si no hay usuario → login
-    if (!user) {
+    if (!user || !user.id) {
+      localStorage.removeItem("user");
       window.location.href = "/static/index.html";
     }
     
     // 👤 mostrar usuario
     if (user) {
-      document.getElementById("user-name").innerText = user.name;
-      document.getElementById("user-email").innerText = user.email;
+      document.getElementById("user-name").innerText = user.name || "Invitado";
+      document.getElementById("user-email").innerText = user.email || "";
+    }
+    function resetSessionAndRedirect() {
+      localStorage.removeItem("user");
+      localStorage.removeItem(ACTIVE_SESSION_KEY);
+      localStorage.removeItem(VISIT_KEY);
+      window.location.href = "/static/index.html";
     }
 
-    function addMessage(text, cls){
+    function clearActiveSession() {
+      localStorage.removeItem(ACTIVE_SESSION_KEY);
+    }
+
+    async function parseJsonSafe(res) {
+      try {
+        return await res.json();
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function handleApiError(res, data) {
+      if (res && res.status === 404 && data && data.detail === "Usuario no encontrado") {
+        addSystemMessage("Tu sesión expiró. Inicia sesión de nuevo.");
+        setTimeout(() => resetSessionAndRedirect(), 800);
+        return true;
+      }
+      return false;
+    }
+
+    function addMessage(text, role, options = {}){
       const d = document.createElement('div');
-      d.className = 'msg ' + cls;
-      d.textContent = text;
+      const isUser = role === 'user';
+      const isAssistant = role === 'assistant';
+      const isSystem = role === 'system';
+      const prefix = options.prefix ?? (isUser || isAssistant);
+      const label = prefix ? (isUser ? 'Tú: ' : '🤖 Asesor: ') : '';
+      d.className = 'msg ' + (isSystem ? 'system' : (isUser ? 'user' : 'bot'));
+      d.textContent = label + text;
       messagesEl.appendChild(d);
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
+    function addSystemMessage(text) {
+      addMessage(text, 'system', { prefix: false });
+    }
+
+    function clearMessages() {
+      messagesEl.innerHTML = '';
+    }
+
+    function getActiveSessionId() {
+      return localStorage.getItem(ACTIVE_SESSION_KEY);
+    }
+
+    function setActiveSessionId(sessionId) {
+      if (sessionId) {
+        localStorage.setItem(ACTIVE_SESSION_KEY, sessionId.toString());
+      }
+    }
+
+    async function createSession() {
+      const res = await fetch('/chatbot/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.id })
+      });
+      const data = await parseJsonSafe(res);
+      if (handleApiError(res, data)) {
+        throw new Error('Usuario no encontrado');
+      }
+      if (!res.ok) {
+        throw new Error((data && data.detail) || 'No se pudo crear el chat');
+      }
+      return data.session;
+    }
+
+    function renderChatList(activeSessionId) {
+      chatListEl.innerHTML = '';
+
+      if (!sessionsCache.length) {
+        historyStatus.textContent = 'Sin chats todavía';
+        return;
+      }
+
+      sessionsCache.forEach((session) => {
+        const item = document.createElement('div');
+        const titulo = session.title || `Chat ${session.id}`;
+        const total = session.message_count || 0;
+        const meta = session.last_message_at
+          ? new Date(session.last_message_at).toLocaleString('es-CO')
+          : 'Sin mensajes';
+
+        const activeId = activeSessionId ? Number(activeSessionId) : null;
+        item.className = 'chat-item' + (activeId === session.id ? ' active' : '');
+        item.dataset.sessionId = session.id;
+        item.innerHTML = `
+          <div>${titulo}</div>
+          <div class="meta">${total} mensajes · ${meta}</div>
+        `;
+        item.addEventListener('click', () => {
+          const nextId = Number(session.id);
+          setActiveSessionId(nextId);
+          renderChatList(nextId);
+          loadHistory({ sessionId: nextId });
+        });
+
+        chatListEl.appendChild(item);
+      });
+
+      historyStatus.textContent = `Chats: ${sessionsCache.length}`;
+    }
+
+    async function fetchSessions({ selectSessionId = null } = {}) {
+      if (!user) return;
+      try {
+        const res = await fetch(`/chatbot/sessions?user_id=${user.id}`);
+        const data = await parseJsonSafe(res);
+        if (handleApiError(res, data)) {
+          return;
+        }
+        if (!res.ok) {
+          throw new Error((data && data.detail) || 'No se pudo cargar el historial');
+        }
+        sessionsCache = data.sessions || [];
+        if (selectSessionId) {
+          setActiveSessionId(selectSessionId);
+        }
+        renderChatList(selectSessionId || getActiveSessionId());
+      } catch (e) {
+        console.error(e);
+        historyStatus.textContent = 'No se pudo cargar el historial';
+        addSystemMessage('❌ No se pudieron cargar los chats');
+      }
+    }
+
+    async function loadHistory({ sessionId = null, limit = HISTORY_LIMIT, showEmptyMessage = true } = {}) {
+      if (!user) return;
+      try {
+        clearMessages();
+        const params = new URLSearchParams({
+          user_id: user.id.toString(),
+          limit: limit.toString(),
+        });
+        if (sessionId) {
+          params.append('session_id', Number(sessionId).toString());
+        }
+
+        const res = await fetch(`/chatbot/history?${params.toString()}`);
+        const data = await parseJsonSafe(res);
+        if (handleApiError(res, data)) {
+          return 0;
+        }
+        if (res && res.status === 404 && data && data.detail === "Sesion no encontrada") {
+          clearActiveSession();
+          const session = await createSession();
+          setActiveSessionId(session.id);
+          await fetchSessions({ selectSessionId: session.id });
+          clearMessages();
+          await loadInitialRecommendation({ force: true, sessionId: session.id });
+          return 0;
+        }
+        if (!res.ok) {
+          throw new Error((data && data.detail) || 'No se pudo cargar el chat');
+        }
+        const mensajes = data.messages || [];
+        if (data.session_id) {
+          setActiveSessionId(data.session_id);
+          renderChatList(data.session_id);
+        }
+
+        if (mensajes.length === 0) {
+          if (showEmptyMessage) {
+            addSystemMessage('No hay mensajes guardados todavía.');
+          }
+          return 0;
+        }
+
+        mensajes.forEach((msg) => addMessage(msg.content, msg.role));
+        return mensajes.length;
+      } catch (e) {
+        console.error(e);
+        addSystemMessage('❌ Error al cargar el historial');
+        return 0;
+      }
+    }
+
     // 🎯 Cargar recomendación inicial si es la primera vez
-    async function loadInitialRecommendation() {
-      const visitKey = `chatbot_visited_${user.id}`;
-      const hasVisited = localStorage.getItem(visitKey);
+    async function loadInitialRecommendation({ force = false, sessionId = null } = {}) {
+      const hasVisited = localStorage.getItem(VISIT_KEY);
       
-      if (!hasVisited) {
-        addMessage('👋 Generando tu recomendación inicial...', 'bot');
+      if (!hasVisited || force) {
+        addSystemMessage('👋 Generando tu recomendación inicial...');
         
         try {
           const res = await fetch('/chatbot/initial-recommendation', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ user_id: user.id })
+            body: JSON.stringify({ user_id: user.id, session_id: sessionId })
           });
           
-          const data = await res.json();
+          const data = await parseJsonSafe(res);
+          if (handleApiError(res, data)) {
+            return;
+          }
           
           if (res.ok) {
-            addMessage('📊 ' + (data.recommendation || 'Desculpa, no se pudo generar la recomendación'), 'bot');
+            addMessage(
+              data.recommendation || 'Disculpa, no se pudo generar la recomendación',
+              'assistant'
+            );
+            if (data.follow_up) {
+              addMessage(data.follow_up, 'assistant');
+            }
+            localStorage.setItem(VISIT_KEY, 'true');
+            if (data.session_id) {
+              setActiveSessionId(data.session_id);
+              renderChatList(data.session_id);
+            }
           } else {
-            addMessage('⚠️ ' + (data.detail || 'No se pudo cargar la recomendación'), 'bot');
+            addSystemMessage('⚠️ ' + (data.detail || 'No se pudo cargar la recomendación'));
           }
         } catch (e) {
           console.error(e);
-          addMessage('❌ Error al cargar la recomendación inicial', 'bot');
+          addSystemMessage('❌ Error al cargar la recomendación inicial');
         }
-        
-        // Marcar como visitado
-        localStorage.setItem(visitKey, 'true');
       }
+
+      fetchSessions({ selectSessionId: sessionId });
     }
-    
-    // Ejecutar cuando carga la página
-    loadInitialRecommendation();
+
+    document.getElementById('new-session').addEventListener('click', async () => {
+      try {
+        const session = await createSession();
+        setActiveSessionId(session.id);
+        await fetchSessions({ selectSessionId: session.id });
+        clearMessages();
+
+        if (!localStorage.getItem(VISIT_KEY)) {
+          await loadInitialRecommendation({ force: true, sessionId: session.id });
+        } else {
+          addMessage('Listo, dime en qué tema financiero te puedo ayudar hoy.', 'assistant');
+        }
+      } catch (e) {
+        console.error(e);
+        addSystemMessage('❌ No se pudo crear un nuevo chat');
+      }
+    });
 
     document.getElementById('send').addEventListener('click', async ()=>{
       const sendBtn = document.getElementById('send');
+      const prevText = sendBtn.textContent;
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Enviando...';
       const user_id = user.id;
+      let sessionId = getActiveSessionId();
+      if (!sessionId) {
+        try {
+          const session = await createSession();
+          sessionId = session.id;
+          setActiveSessionId(sessionId);
+          await fetchSessions({ selectSessionId: sessionId });
+        } catch (e) {
+          console.error(e);
+          addSystemMessage('❌ No se pudo iniciar el chat');
+          sendBtn.disabled = false;
+          sendBtn.textContent = prevText;
+          return;
+        }
+      }
       const message = document.getElementById('message').value.trim();
       
       if(!message){ 
-        addMessage('Por favor escribe un mensaje', 'bot');
+        addSystemMessage('Por favor escribe un mensaje');
+        sendBtn.disabled = false;
+        sendBtn.textContent = prevText;
         return; 
       }
       
-      addMessage('Tú: ' + message, 'user');
+      addMessage(message, 'user');
       document.getElementById('message').value = '';
-
-      sendBtn.disabled = true;
-      const prevText = sendBtn.textContent;
-      sendBtn.textContent = 'Enviando...';
 
       try{
         const res = await fetch('/chatbot/message', {
           method: 'POST', 
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ user_id, message })
+          body: JSON.stringify({ user_id, session_id: Number(sessionId), message })
         });
         
         let data;
@@ -171,19 +584,24 @@
         } catch(e){ 
           data = { reply: 'Error: Respuesta inválida del servidor' }; 
         }
+
+        if (handleApiError(res, data)) {
+          return;
+        }
         
         if(res.ok){
-          addMessage('🤖 Asesor: ' + (data.reply || 'No se generó respuesta'), 'bot');
+          addMessage(data.reply || 'No se generó respuesta', 'assistant');
         } else {
           const errMsg = data?.detail || data?.reply || 'Error desconocido';
-          addMessage('❌ Error: ' + errMsg, 'bot');
+          addSystemMessage('❌ Error: ' + errMsg);
         }
       }catch(e){
         console.error(e); 
-        addMessage('❌ Error al contactar al servidor: ' + e.message, 'bot');
+        addSystemMessage('❌ Error al contactar al servidor: ' + e.message);
       } finally {
         sendBtn.disabled = false;
         sendBtn.textContent = prevText;
+        fetchSessions();
       }
     });
     
@@ -195,12 +613,42 @@
       }
     });
 
-    // Mensaje inicial
-    window.addEventListener('load', () => {
-      addMessage('👋 Hola ' + user.name + ', soy tu asesor financiero digital. ¿En qué puedo ayudarte hoy?', 'bot');
-    });
+    async function initChat() {
+      await fetchSessions();
+
+      let activeSessionId = getActiveSessionId();
+      const ids = sessionsCache.map((session) => session.id);
+      if (activeSessionId && !ids.includes(Number(activeSessionId))) {
+        clearActiveSession();
+        activeSessionId = null;
+      }
+
+      if (!activeSessionId && sessionsCache.length) {
+        activeSessionId = sessionsCache[0].id;
+        setActiveSessionId(activeSessionId);
+        renderChatList(activeSessionId);
+      }
+
+      if (!activeSessionId) {
+        const session = await createSession();
+        activeSessionId = session.id;
+        setActiveSessionId(activeSessionId);
+        await fetchSessions({ selectSessionId: activeSessionId });
+      }
+
+      const historyCount = await loadHistory({
+        sessionId: activeSessionId,
+        showEmptyMessage: false,
+      });
+
+      if (!historyCount) {
+        await loadInitialRecommendation({ force: true, sessionId: activeSessionId });
+      } else {
+        renderChatList(activeSessionId);
+      }
+    }
+
+    initChat();
   </script>
-</body>
-</html>
 </body>
 </html>

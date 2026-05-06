@@ -11,4 +11,13 @@ class User(Base):
     password = Column(String)
 
     profile = relationship("UserProfile", back_populates="user", uselist=False)
-    conversation_messages = relationship("ConversationMessage", back_populates="user", cascade="all, delete-orphan")
+    conversation_messages = relationship(
+        "ConversationMessage",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    conversation_sessions = relationship(
+        "ConversationSession",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )

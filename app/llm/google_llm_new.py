@@ -4,6 +4,7 @@ Basado en el código del notebook chatbot.ipynb
 """
 
 import os
+import re
 from dotenv import load_dotenv
 
 # Cargar variables de entorno
@@ -11,37 +12,55 @@ load_dotenv()
 
 try:
     from langchain_google_genai import ChatGoogleGenerativeAI
-    from langchain_core.messages import HumanMessage, SystemMessage
+    from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
     LANGCHAIN_AVAILABLE = True
 except ImportError:
     LANGCHAIN_AVAILABLE = False
 
+KB_PDF_PATH_ENV = "KB_PDF_PATH"
+KB_MAX_PAGES_ENV = "KB_MAX_PAGES"
+KB_MAX_CHARS = 1800
+KB_CHUNK_SIZE = 900
+KB_CHUNK_OVERLAP = 150
+_KB_CACHE = {"path": None, "text": None}
+FALLBACK_BUSY_MESSAGE = (
+    "Ahora mismo el servicio de IA está ocupado. "
+    "Intenta de nuevo en un momento. "
+    "Si quieres, puedo ayudarte con presupuesto, deudas, ahorro o crédito."
+)
+
 
 # System prompt del asesor financiero
 SYSTEM_PROMPT = """
-Eres un asesor financiero digital especializado en ayudar a personas con bajos ingresos en Colombia.
+Eres un asesor financiero digital para Colombia.
 
 Tu objetivo es:
-- Analizar la situación financiera del usuario
-- Dar recomendaciones prácticas y realistas
-- Educar al usuario con lenguaje sencillo
+- Responder preguntas de finanzas personales (ahorro, presupuesto, deudas, credito, inversiones, seguros, impuestos basicos).
+- Dar recomendaciones practicas y realistas.
+- Educar con lenguaje sencillo.
 
 Reglas:
-- Usa máximo 4 frases
-- No uses lenguaje técnico complejo
-- Sé claro, directo y útil
-- Prioriza evitar el sobreendeudamiento
-- Da máximo 5 recomendaciones
+- Responde solo temas financieros. Si la pregunta no es de finanzas, pide reformular hacia un tema financiero.
+- No uses lenguaje tecnico complejo.
+- Se claro, directo y util.
+- Prioriza evitar el sobreendeudamiento.
+- No uses markdown ni listas numeradas.
 
 Formato de respuesta:
-1. Diagnóstico breve
-2. Recomendaciones
-3. Explicación sencilla
+- Diagnostico breve.
+- Recomendaciones.
+- Explicacion sencilla.
 """
 
 
-def construir_input_usuario(data):
-    """Construir prompt con datos financieros del usuario"""
+def construir_input_usuario(data, user_data=None):
+    """Construir prompt con datos financieros o de encuesta del usuario."""
+    if not data:
+        return ""
+
+    if any(str(key).startswith("q") for key in data.keys()):
+        return construir_contexto_encuesta(data, user_data)
+
     return f"""
     El usuario tiene la siguiente situación financiera:
 
@@ -52,6 +71,142 @@ def construir_input_usuario(data):
 
     Genera recomendaciones financieras personalizadas.
     """
+
+
+def construir_contexto_encuesta(profile_data, user_data=None):
+    """Construir contexto con respuestas de la encuesta financiera."""
+    etiquetas = [
+        ("q1", "Conocimiento (dinero en casa pierde valor)"),
+        ("q2", "Conocimiento (deuda con intereses)"),
+        ("q3", "Definición de ahorrar"),
+        ("q4", "Conocimiento (tasa de interés)"),
+        ("q5", "Endeudamiento"),
+        ("q6", "Estrategia de deudas"),
+        ("q7", "Conocimiento (inflación)"),
+        ("q8", "Conocimiento (tarjeta crédito)"),
+        ("q9", "Diversificación"),
+        ("q10", "Control de gastos"),
+        ("q11", "Ahorros"),
+        ("q12", "Gastos inesperados"),
+        ("q13", "Fuente de ingresos"),
+        ("q14", "Edad"),
+        ("q15", "Nivel educativo"),
+        ("q16", "Ingresos mensuales"),
+    ]
+
+    nombre = user_data.get("name") if user_data else None
+    correo = user_data.get("email") if user_data else None
+    encabezado = "Perfil del usuario"
+    if nombre or correo:
+        encabezado += f" (nombre: {nombre or 'N/A'}, email: {correo or 'N/A'})"
+
+    respuestas = [
+        f"- {etiqueta}: {profile_data.get(key, 'N/A')}"
+        for key, etiqueta in etiquetas
+    ]
+
+    return "\n".join([encabezado, "Respuestas de la encuesta:", *respuestas])
+
+
+def _perfil_tiene_finanzas(profile_data):
+    if not profile_data:
+        return False
+    claves = {"ingresos", "gastos_fijos", "gastos_variables", "deudas"}
+    return any(clave in profile_data for clave in claves)
+
+
+def limpiar_formato_texto(texto):
+    if not texto:
+        return texto
+
+    limpio = texto.replace("**", "")
+    limpio = limpio.replace("__", "")
+
+    lineas = []
+    for linea in limpio.splitlines():
+        linea = re.sub(r"^\s*#+\s*", "", linea)
+        linea = re.sub(r"^\s*\d+\.\s*", "- ", linea)
+        linea = re.sub(r"^\s*[-*]\s*", "- ", linea)
+        linea = linea.strip()
+        if linea:
+            lineas.append(linea)
+
+    return "\n".join(lineas)
+
+
+def _normalizar_texto(texto):
+    palabras = re.findall(r"[a-zA-Z0-9áéíóúñÁÉÍÓÚÑ]+", texto.lower())
+    return {p for p in palabras if len(p) > 2}
+
+
+def _extraer_texto_pdf(pdf_path, max_pages):
+    try:
+        from pypdf import PdfReader
+    except ImportError:
+        return None
+
+    try:
+        reader = PdfReader(pdf_path)
+        paginas = reader.pages[:max_pages]
+        contenido = []
+        for pagina in paginas:
+            texto = pagina.extract_text() or ""
+            if texto:
+                contenido.append(texto)
+        return "\n".join(contenido).strip()
+    except Exception:
+        return None
+
+
+def _seleccionar_fragmento_relevante(texto, consulta, max_chars):
+    if not texto:
+        return None
+
+    consulta_tokens = _normalizar_texto(consulta)
+    if not consulta_tokens:
+        return texto[:max_chars]
+
+    chunks = []
+    inicio = 0
+    while inicio < len(texto):
+        fin = min(inicio + KB_CHUNK_SIZE, len(texto))
+        chunks.append(texto[inicio:fin])
+        if fin == len(texto):
+            break
+        inicio = fin - KB_CHUNK_OVERLAP
+
+    mejor_chunk = None
+    mejor_score = -1
+    for chunk in chunks:
+        tokens = _normalizar_texto(chunk)
+        score = len(tokens.intersection(consulta_tokens))
+        if score > mejor_score:
+            mejor_score = score
+            mejor_chunk = chunk
+
+    if not mejor_chunk:
+        return None
+
+    return mejor_chunk[:max_chars]
+
+
+def obtener_contexto_knowledge_base(mensaje):
+    """Extraer contexto relevante desde un PDF configurado por variable de entorno."""
+    pdf_path = os.getenv(KB_PDF_PATH_ENV)
+    if not pdf_path:
+        return None
+
+    max_pages = int(os.getenv(KB_MAX_PAGES_ENV, "10"))
+
+    if _KB_CACHE["path"] != pdf_path:
+        _KB_CACHE["text"] = _extraer_texto_pdf(pdf_path, max_pages)
+        _KB_CACHE["path"] = pdf_path
+
+    texto = _KB_CACHE.get("text")
+    if not texto:
+        return None
+
+    return _seleccionar_fragmento_relevante(texto, mensaje, KB_MAX_CHARS)
 
 
 def analizar_usuario(data):
@@ -71,26 +226,27 @@ def analizar_usuario(data):
     }
 
 
-def generar_respuesta_ia(mensaje, perfil_data=None, historial_conversacion=None):
+def generar_respuesta_ia(mensaje, perfil_data=None, historial_conversacion=None, user_data=None):
     """
     Generar respuesta del LLM usando Google Gemini.
     
     Args:
         mensaje: str - Pregunta del usuario
-        perfil_data: dict - Datos financieros del usuario (opcional)
+        perfil_data: dict - Datos financieros del usuario o encuesta (opcional)
         historial_conversacion: list - Historial de mensajes anteriores [{role, content}, ...] (opcional)
+        user_data: dict - Datos del usuario (name, email, etc) (opcional)
         
     Returns:
         str - Respuesta del modelo
     """
     
     if not LANGCHAIN_AVAILABLE:
-        return generar_respuesta_fallback(mensaje, perfil_data)
+        return None
     
     try:
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
-            return "⚠️ Error: No se encontró GOOGLE_API_KEY. Configura tu archivo .env"
+            return None
         
         # Inicializar modelo
         llm = ChatGoogleGenerativeAI(
@@ -100,15 +256,17 @@ def generar_respuesta_ia(mensaje, perfil_data=None, historial_conversacion=None)
         )
         
         # Construir historial
-        history = []
-        history.append(SystemMessage(content=SYSTEM_PROMPT))
-        
-        # Agregar contexto financiero si existe (solo una vez al inicio)
-        if perfil_data and (not historial_conversacion or len(historial_conversacion) == 0):
-            context_msg = construir_input_usuario(perfil_data)
-            history.append(HumanMessage(content=context_msg))
-            # Agregar un mensaje del asistente de confirmación
-            history.append(HumanMessage(content="Entendido. Tengo en cuenta tu información financiera. ¿Có mo puedo ayudarte?"))
+        history = [SystemMessage(content=SYSTEM_PROMPT)]
+
+        contexto_usuario = construir_input_usuario(perfil_data, user_data)
+        if contexto_usuario:
+            history.append(SystemMessage(content=contexto_usuario))
+
+        contexto_kb = obtener_contexto_knowledge_base(mensaje)
+        if contexto_kb:
+            history.append(SystemMessage(
+                content="Contexto de referencia (PDF):\n" + contexto_kb
+            ))
         
         # Agregar historial previo de la conversación
         if historial_conversacion:
@@ -118,7 +276,9 @@ def generar_respuesta_ia(mensaje, perfil_data=None, historial_conversacion=None)
                 if role == 'user':
                     history.append(HumanMessage(content=content))
                 elif role == 'assistant':
-                    history.append(HumanMessage(content=f"Assistant: {content}"))
+                    history.append(AIMessage(content=content))
+                else:
+                    history.append(HumanMessage(content=content))
         
         # Agregar mensaje actual del usuario
         history.append(HumanMessage(content=mensaje))
@@ -126,9 +286,9 @@ def generar_respuesta_ia(mensaje, perfil_data=None, historial_conversacion=None)
         # Invocar modelo
         response = llm.invoke(history)
         return response.content
-        
-    except Exception as e:
-        return f"❌ Error al generar respuesta: {str(e)}"
+
+    except Exception:
+        return None
 
 
 def generar_respuesta_fallback(mensaje, perfil_data=None):
@@ -142,7 +302,6 @@ def generar_respuesta_fallback(mensaje, perfil_data=None):
     # Análisis básico
     metricas = analizar_usuario(perfil_data)
     ahorro = metricas['ahorro']
-    total_gastos = metricas['total_gastos']
     ingresos = perfil_data.get('ingresos', 0)
     
     respuesta = f"Según tus datos financieros: "
@@ -162,6 +321,11 @@ def generar_respuesta_fallback(mensaje, perfil_data=None):
         respuesta += f"Además, tus deudas son altas. Prioriza pagarlas lo antes posible."
     
     return respuesta
+
+
+def generar_respuesta_fallback_general():
+    """Respuesta general cuando la IA no está disponible."""
+    return FALLBACK_BUSY_MESSAGE
 
 
 def generar_recomendacion_inicial(profile_data, user_data=None):
@@ -185,6 +349,7 @@ def generar_recomendacion_inicial(profile_data, user_data=None):
     1. Alentadora y positiva
     2. Realista y práctica
     3. En lenguaje sencillo (máximo 5-6 frases)
+    4. Sin markdown ni listas numeradas
     
     Respuestas del usuario:
     - Conocimiento (dinero en casa pierde valor): {profile_data.get('q1', 'N/A')}
@@ -207,7 +372,23 @@ def generar_recomendacion_inicial(profile_data, user_data=None):
     Genera una bienvenida cálida y una recomendación del primer paso que debe tomar según su perfil.
     """
     
-    return generar_respuesta_ia(prompt_inicial, profile_data)
+    recomendacion = generar_respuesta_ia(
+        prompt_inicial,
+        profile_data,
+        user_data=user_data,
+    )
+
+    if recomendacion:
+        return limpiar_formato_texto(recomendacion)
+
+    nombre = user_data.get("name") if user_data else None
+    saludo = f"Hola {nombre}. " if nombre else "Hola. "
+    return (
+        saludo
+        + "Gracias por completar tu encuesta financiera. "
+        + "El mejor primer paso es registrar tus gastos por una semana para ver en qué se va tu dinero. "
+        + "Luego define un ahorro fijo, aunque sea pequeño, y evita nuevas deudas mientras organizas tus cuentas."
+    )
 
 
 def procesar_mensaje_chatbot(user_id, mensaje, user_data=None, profile_data=None, historial_conversacion=None):
@@ -234,7 +415,20 @@ def procesar_mensaje_chatbot(user_id, mensaje, user_data=None, profile_data=None
     
     # Generar respuesta
     try:
-        reply = generar_respuesta_ia(mensaje, profile_data, historial_conversacion)
+        reply = generar_respuesta_ia(
+            mensaje,
+            profile_data,
+            historial_conversacion,
+            user_data=user_data,
+        )
+
+        if not reply:
+            if _perfil_tiene_finanzas(profile_data):
+                reply = generar_respuesta_fallback(mensaje, profile_data)
+            else:
+                reply = generar_respuesta_fallback_general()
+
+        reply = limpiar_formato_texto(reply)
         
         return {
             "error": None,
