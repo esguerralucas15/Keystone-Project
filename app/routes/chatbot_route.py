@@ -41,7 +41,7 @@ def _serialize_session(session: ConversationSession, message_count=0, last_messa
 
 
 def _create_session(db: Session, user_id: int, title: Optional[str] = None):
-    etiqueta = title or f"Chat {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+    etiqueta = title or "Chat nuevo"
     session = ConversationSession(
         user_id=user_id,
         title=etiqueta,
@@ -51,6 +51,21 @@ def _create_session(db: Session, user_id: int, title: Optional[str] = None):
     db.commit()
     db.refresh(session)
     return session
+
+
+def _build_session_title(message: str) -> str:
+    limpio = " ".join(message.strip().split())
+    if not limpio:
+        return "Chat"
+
+    max_len = 48
+    if len(limpio) <= max_len:
+        return limpio
+
+    recorte = limpio[:max_len].rstrip()
+    if " " in recorte:
+        recorte = recorte.rsplit(" ", 1)[0]
+    return recorte + "…"
 
 
 @router.post("/message")
@@ -107,6 +122,18 @@ def chatbot_message(payload: dict, db: Session = Depends(get_db)):
                 raise HTTPException(status_code=404, detail="Sesion no encontrada")
         else:
             session = _create_session(db, user_id)
+
+        # Si es el primer mensaje del usuario, usarlo como titulo del chat
+        if message:
+            primer_mensaje_usuario = db.query(ConversationMessage).filter(
+                ConversationMessage.user_id == user_id,
+                ConversationMessage.session_id == session.id,
+                ConversationMessage.role == "user",
+            ).first()
+            if not primer_mensaje_usuario:
+                session.title = _build_session_title(message)
+                db.add(session)
+                db.commit()
 
         # Recuperar historial previo (ultimas interacciones de la sesion)
         historial_previo = db.query(ConversationMessage).filter(

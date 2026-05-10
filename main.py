@@ -2,10 +2,12 @@ from fastapi import FastAPI
 from app.routes import user_route
 from app.routes import chatbot_route
 from app.routes import simulator_route
+from app.routes import finance_route
 from app.database.database import engine, Base
 from app.models.user_model import User
 from app.models.profile_model import UserProfile
 from app.models.conversation_model import ConversationMessage
+from app.models.finance_model import FinanceRecord
 from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi.responses import HTMLResponse
@@ -28,6 +30,7 @@ Base.metadata.create_all(bind=engine)
 app.include_router(user_route.router, prefix="/users")
 app.include_router(chatbot_route.router, prefix="/chatbot")
 app.include_router(simulator_route.router, prefix="/simulator")
+app.include_router(finance_route.router, prefix="/finance")
 
 @app.get("/api")
 def root():

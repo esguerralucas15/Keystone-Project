@@ -21,3 +21,8 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    finance_records = relationship(
+        "FinanceRecord",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
