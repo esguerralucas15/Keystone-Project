@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metas de Ahorro - EquiFinance</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&display=swap');
+
+        :root {
+            --bg: #0b0f14;
+            --panel: #121a26;
+            --border: #243043;
+            --text: #e6edf3;
+            --muted: #8fa1b3;
+            --accent: #38bdf8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            color: var(--text);
+            background: radial-gradient(circle at top, #1b263a, #0b0f14 65%);
+            min-height: 100vh;
+            padding: 28px 20px 40px;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        h1 { font-size: 26px; font-weight: 600; }
+
+        button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 10px;
+            background: var(--accent);
+            color: #03101c;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        .note {
+            color: var(--muted);
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Metas de Ahorro</h1>
+            <button onclick="window.location.href='/static/dashboard.html'">← Volver</button>
+        </div>
+
+        <div class="card">
+            <h2>Estamos ajustando este modulo</h2>
+            <p class="note">Aqui podras crear y dar seguimiento a tus metas de ahorro. En el siguiente paso lo dejaremos completo.
+            Si tienes dudas sobre cuanto ahorrar, consulta el chat y vuelve para registrar tu meta.</p>
+        </div>
+    </div>
+</body>
+</html>

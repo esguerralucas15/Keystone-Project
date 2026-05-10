@@ -9,6 +9,7 @@ from app.simulador.credit_simulator import (
     obtener_tipos_credito,
     simular_credito_ruta_a,
     simular_credito_ruta_b,
+    simular_credito_vivienda,
     obtener_tabla_amortizacion,
 )
 
@@ -62,14 +63,25 @@ def simular_ruta_a(payload: dict):
     """
     try:
         capital = payload.get("capital")
-        tipo = payload.get("tipo")
+        producto_id = payload.get("producto_id") or payload.get("tipo")
         plazo = payload.get("plazo")
         tasa_p = payload.get("tasa_mensual")
+        edad = payload.get("edad")
+        ingreso_mensual = payload.get("ingreso_mensual")
+        incluye_seguro = payload.get("incluye_seguro", True)
         
-        if None in [capital, tipo, plazo, tasa_p]:
+        if None in [capital, producto_id, plazo]:
             raise HTTPException(status_code=400, detail="Parámetros incompletos")
         
-        resultado = simular_credito_ruta_a(capital, tipo, plazo, tasa_p)
+        resultado = simular_credito_ruta_a(
+            capital,
+            int(producto_id),
+            plazo,
+            tasa_p,
+            edad,
+            ingreso_mensual,
+            incluye_seguro,
+        )
         
         if "error" in resultado:
             raise HTTPException(status_code=400, detail=resultado["error"])
@@ -97,14 +109,25 @@ def simular_ruta_b(payload: dict):
     """
     try:
         cuota = payload.get("cuota_mensual")
-        tipo = payload.get("tipo")
+        producto_id = payload.get("producto_id") or payload.get("tipo")
         plazo = payload.get("plazo")
         tasa_p = payload.get("tasa_mensual")
+        edad = payload.get("edad")
+        ingreso_mensual = payload.get("ingreso_mensual")
+        incluye_seguro = payload.get("incluye_seguro", True)
         
-        if None in [cuota, tipo, plazo, tasa_p]:
+        if None in [cuota, producto_id, plazo]:
             raise HTTPException(status_code=400, detail="Parámetros incompletos")
         
-        resultado = simular_credito_ruta_b(cuota, tipo, plazo, tasa_p)
+        resultado = simular_credito_ruta_b(
+            cuota,
+            int(producto_id),
+            plazo,
+            tasa_p,
+            edad,
+            ingreso_mensual,
+            incluye_seguro,
+        )
         
         if "error" in resultado:
             raise HTTPException(status_code=400, detail=resultado["error"])
@@ -134,14 +157,68 @@ def get_amortizacion(payload: dict):
         capital = payload.get("capital")
         tasa_p = payload.get("tasa_mensual")
         plazo = payload.get("plazo")
-        cuota = payload.get("cuota_mensual")
+        cuota_base = payload.get("cuota_base")
+        producto_id = payload.get("producto_id")
+        incluye_seguro = payload.get("incluye_seguro", True)
         
-        if None in [capital, tasa_p, plazo, cuota]:
+        if None in [capital, tasa_p, plazo, cuota_base, producto_id]:
             raise HTTPException(status_code=400, detail="Parámetros incompletos")
         
-        tabla = obtener_tabla_amortizacion(capital, tasa_p, plazo, cuota)
+        tabla = obtener_tabla_amortizacion(
+            capital,
+            tasa_p,
+            plazo,
+            cuota_base,
+            int(producto_id),
+            incluye_seguro,
+        )
         
         return {"tabla": tabla, "filas": len(tabla)}
     
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/simular/vivienda")
+def simular_vivienda(payload: dict):
+    """
+    Simula un crédito de vivienda.
+
+    Payload:
+    {
+        "producto_id": 202,
+        "ingreso_mensual": 8000000,
+        "edad": 45,
+        "plazo_anos": 20,
+        "solicitantes": 1,
+        "modalidad": "Hipotecario"
+    }
+    """
+    try:
+        producto_id = payload.get("producto_id")
+        ingreso_mensual = payload.get("ingreso_mensual")
+        edad = payload.get("edad")
+        plazo_anos = payload.get("plazo_anos")
+        solicitantes = payload.get("solicitantes", 1)
+        modalidad = payload.get("modalidad", "Hipotecario")
+
+        if None in [producto_id, ingreso_mensual, edad, plazo_anos]:
+            raise HTTPException(status_code=400, detail="Parámetros incompletos")
+
+        resultado = simular_credito_vivienda(
+            int(producto_id),
+            float(ingreso_mensual),
+            int(edad),
+            int(plazo_anos),
+            int(solicitantes),
+            str(modalidad),
+        )
+
+        if "error" in resultado:
+            raise HTTPException(status_code=400, detail=resultado["error"])
+
+        return resultado
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

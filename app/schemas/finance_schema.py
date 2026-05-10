@@ -2,12 +2,27 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class FinanceRecordCreate(BaseModel):
+class FinanceProfileUpsert(BaseModel):
+    user_id: int
+    monthly_income: float
+
+
+class DailyRecordCreate(BaseModel):
     user_id: int
     record_date: Optional[str] = None
-    income: float
-    fixed_expenses: float
-    variable_expenses: float
-    debt_payment: float
-    savings_current: Optional[float] = None
-    goal_amount: Optional[float] = None
+    expenses: float
+    expense_type: str
+    category: str
+    note: Optional[str] = None
+
+
+class SavingsGoalCreate(BaseModel):
+    user_id: int
+    title: str
+    target_amount: float
+    target_months: int
+
+
+class SavingsCheckinCreate(BaseModel):
+    record_date: Optional[str] = None
+    saved_amount: float

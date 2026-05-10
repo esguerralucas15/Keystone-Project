@@ -21,8 +21,14 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
-    finance_records = relationship(
-        "FinanceRecord",
+    finance_profile = relationship("FinanceProfile", back_populates="user", uselist=False)
+    daily_records = relationship(
+        "DailyRecord",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    savings_goals = relationship(
+        "SavingsGoal",
         back_populates="user",
         cascade="all, delete-orphan",
     )

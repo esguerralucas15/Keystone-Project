@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Simulador de Crédito - EquiFinance</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&family=DM+Mono:wght@400&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
-      font-family: 'Arial', sans-serif; 
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Space Grotesk', sans-serif; 
+      background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
       min-height: 100vh;
       padding: 20px;
     }
@@ -21,7 +22,7 @@
       overflow: hidden;
     }
     .header { 
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
       color: white;
       padding: 30px 20px;
       display: flex;
@@ -38,7 +39,7 @@
       cursor: pointer;
       transition: all 0.3s;
     }
-    .back-btn:hover { background: white; color: #667eea; }
+    .back-btn:hover { background: white; color: #0ea5e9; }
     
     .content { padding: 40px; }
     
@@ -47,7 +48,7 @@
       font-size: 20px; 
       color: #333; 
       margin-bottom: 20px;
-      border-bottom: 3px solid #667eea;
+      border-bottom: 3px solid #0ea5e9;
       padding-bottom: 10px;
     }
     
@@ -71,8 +72,8 @@
     input:focus,
     select:focus {
       outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+      border-color: #0ea5e9;
+      box-shadow: 0 0 5px rgba(14, 165, 233, 0.3);
     }
     
     .button-group {
@@ -84,14 +85,14 @@
       padding: 12px 20px;
       border: none;
       border-radius: 5px;
-      background: #667eea;
+      background: #0ea5e9;
       color: white;
       cursor: pointer;
       font-size: 14px;
       font-weight: bold;
       transition: all 0.3s;
     }
-    button:hover { background: #5568d3; transform: translateY(-2px); }
+    button:hover { background: #0284c7; transform: translateY(-2px); }
     button:disabled { background: #ccc; cursor: not-allowed; }
     button.secondary { background: #6c757d; }
     button.secondary:hover { background: #5a6268; }
@@ -110,20 +111,20 @@
       transition: all 0.3s;
       text-align: center;
     }
-    .ruta-card:hover { border-color: #667eea; background: #f8f9ff; }
+    .ruta-card:hover { border-color: #0ea5e9; background: #f0f9ff; }
     .ruta-card.active { 
-      border-color: #667eea; 
-      background: #f0f3ff;
-      box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+      border-color: #0ea5e9; 
+      background: #e0f2fe;
+      box-shadow: 0 0 10px rgba(14, 165, 233, 0.2);
     }
-    .ruta-card h3 { color: #667eea; margin-bottom: 10px; }
+    .ruta-card h3 { color: #0ea5e9; margin-bottom: 10px; }
     .ruta-card p { font-size: 13px; color: #666; }
     
     .resultado {
-      background: #f0f3ff;
+      background: #e0f2fe;
       padding: 30px;
       border-radius: 8px;
-      border-left: 5px solid #667eea;
+      border-left: 5px solid #0ea5e9;
     }
     .resultado h3 { color: #333; margin-bottom: 20px; }
     
@@ -146,7 +147,7 @@
     .resultado-item .valor {
       font-size: 20px;
       font-weight: bold;
-      color: #667eea;
+      color: #0ea5e9;
     }
     
     .alerta {
@@ -175,7 +176,7 @@
       font-size: 13px;
     }
     .tabla-amortizacion th {
-      background: #667eea;
+      background: #0ea5e9;
       color: white;
       padding: 12px;
       text-align: left;
@@ -192,7 +193,7 @@
     .loader {
       display: inline-block;
       border: 3px solid #f3f3f3;
-      border-top: 3px solid #667eea;
+      border-top: 3px solid #0ea5e9;
       border-radius: 50%;
       width: 20px;
       height: 20px;
@@ -210,12 +211,12 @@
     </div>
 
     <div class="content">
-      <!-- SELECCIÓN DE TASA -->
+      <!-- SELECCIÓN DE BANCO Y PRODUCTO -->
       <div class="section">
-        <h2>Paso 1: Tasa de Interés</h2>
+        <h2>Paso 1: Banco y producto</h2>
         
         <div class="form-group">
-          <label>Elige un banco o ingresa tu propia tasa</label>
+          <label>Selecciona un banco</label>
           <select id="banco-select" onchange="cambiarBanco()">
             <option value="">-- Selecciona un banco --</option>
           </select>
@@ -225,6 +226,17 @@
           <div id="banco-detalle"></div>
         </div>
 
+        <div class="form-group hidden" id="producto-group">
+          <label>Selecciona el producto</label>
+          <select id="producto-select" onchange="cambiarProducto()">
+            <option value="">-- Selecciona un producto --</option>
+          </select>
+        </div>
+
+        <div id="info-producto" class="form-group hidden">
+          <div id="producto-detalle"></div>
+        </div>
+
         <div class="form-group hidden" id="tasa-manual-group">
           <label>Ingresa la tasa mensual vencida (%)</label>
           <input type="number" id="tasa-manual" placeholder="Ej: 1.75" step="0.01" min="0">
@@ -232,7 +244,7 @@
 
         <div id="alerta-tasa" class="alerta hidden"></div>
 
-        <button onclick="confirmarTasa()" style="width: 100%;">Confirmar Tasa</button>
+        <button onclick="confirmarProducto()" style="width: 100%;">Continuar</button>
       </div>
 
       <!-- SELECCIÓN DE RUTA -->
@@ -261,15 +273,26 @@
         </div>
 
         <div class="form-group">
-          <label>Tipo de crédito</label>
-          <select id="tipo-a">
-            <option value="">-- Selecciona un tipo --</option>
-          </select>
-        </div>
-
-        <div class="form-group">
           <label>Plazo (meses)</label>
           <input type="number" id="plazo-a" placeholder="Ej: 48" min="12" step="1">
+        </div>
+
+        <div class="form-grid hidden" id="requisitos-a">
+          <div>
+            <label>Edad</label>
+            <input type="number" id="edad-a" placeholder="Ej: 30" min="18" step="1">
+          </div>
+          <div>
+            <label>Ingreso mensual (COP)</label>
+            <input type="number" id="ingreso-a" placeholder="Ej: 3000000" min="0" step="10000">
+          </div>
+        </div>
+
+        <div class="form-group hidden" id="seguro-a-group">
+          <label>
+            <input type="checkbox" id="seguro-a" checked>
+            Incluir seguro de vida (estimado)
+          </label>
         </div>
 
         <button onclick="simularRutaA()" style="width: 100%;">Simular Crédito</button>
@@ -285,18 +308,71 @@
         </div>
 
         <div class="form-group">
-          <label>Tipo de crédito</label>
-          <select id="tipo-b">
-            <option value="">-- Selecciona un tipo --</option>
-          </select>
-        </div>
-
-        <div class="form-group">
           <label>Plazo (meses)</label>
           <input type="number" id="plazo-b" placeholder="Ej: 48" min="12" step="1">
         </div>
 
+        <div class="form-grid hidden" id="requisitos-b">
+          <div>
+            <label>Edad</label>
+            <input type="number" id="edad-b" placeholder="Ej: 30" min="18" step="1">
+          </div>
+          <div>
+            <label>Ingreso mensual (COP)</label>
+            <input type="number" id="ingreso-b" placeholder="Ej: 3000000" min="0" step="10000">
+          </div>
+        </div>
+
+        <div class="form-group hidden" id="seguro-b-group">
+          <label>
+            <input type="checkbox" id="seguro-b" checked>
+            Incluir seguro de vida (estimado)
+          </label>
+        </div>
+
         <button onclick="simularRutaB()" style="width: 100%;">Simular Crédito</button>
+      </div>
+
+      <!-- VIVIENDA -->
+      <div class="section hidden" id="vivienda-section">
+        <h2>Paso 2: Simulación de vivienda</h2>
+
+        <div class="form-grid">
+          <div>
+            <label>Ingreso mensual (COP)</label>
+            <input type="number" id="ingreso-v" placeholder="Ej: 8000000" min="0" step="10000">
+          </div>
+          <div>
+            <label>Edad</label>
+            <input type="number" id="edad-v" placeholder="Ej: 45" min="18" step="1">
+          </div>
+          <div>
+            <label>Plazo (años)</label>
+            <select id="plazo-v">
+              <option value="">-- Selecciona --</option>
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="15">15</option>
+              <option value="20">20</option>
+            </select>
+          </div>
+          <div>
+            <label>Solicitantes</label>
+            <select id="solicitantes-v">
+              <option value="1">1</option>
+              <option value="2">2</option>
+            </select>
+          </div>
+          <div>
+            <label>Modalidad</label>
+            <select id="modalidad-v">
+              <option value="Hipotecario">Hipotecario</option>
+              <option value="Leasing">Leasing Habitacional</option>
+            </select>
+          </div>
+        </div>
+
+        <button onclick="simularVivienda()" style="width: 100%;">Simular Vivienda</button>
       </div>
 
       <!-- RESULTADOS -->

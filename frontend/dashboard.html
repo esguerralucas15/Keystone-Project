@@ -32,7 +32,7 @@
         }
 
         .container {
-            max-width: 1150px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
@@ -99,7 +99,8 @@
 
         label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px; }
 
-        input {
+        input,
+        select {
             width: 100%;
             padding: 10px 12px;
             border-radius: 10px;
@@ -109,22 +110,32 @@
             font-family: 'DM Mono', monospace;
         }
 
-        input:focus {
+        input:focus,
+        select:focus {
             outline: none;
             border-color: var(--accent-2);
             box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
         }
 
-        .score {
+        .score-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .score-line {
+            width: 100%;
             display: flex;
             align-items: center;
-            gap: 18px;
-            margin-bottom: 16px;
+            gap: 16px;
         }
 
         .score-value {
             font-size: 36px;
             font-weight: 600;
+            min-width: 64px;
+            text-align: center;
         }
 
         .score-bar {
@@ -142,7 +153,23 @@
             background: var(--accent);
         }
 
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #0b0f14;
+        }
+
+        .badge.green { background: var(--good); }
+        .badge.yellow { background: var(--warn); }
+        .badge.red { background: var(--danger); }
+
         .summary-grid {
+            width: 100%;
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 10px;
@@ -157,6 +184,27 @@
 
         .summary-item span { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
         .summary-item strong { font-size: 15px; }
+
+        .status {
+            margin-top: 10px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .progress {
+            width: 100%;
+            height: 10px;
+            border-radius: 999px;
+            background: #1b2636;
+            overflow: hidden;
+        }
+
+        .progress span {
+            display: block;
+            height: 100%;
+            width: 0;
+            background: var(--accent);
+        }
 
         .table {
             width: 100%;
@@ -173,26 +221,17 @@
 
         .table th { color: var(--muted); font-weight: 600; }
 
-        .status {
-            margin-top: 10px;
-            font-size: 13px;
+        .note {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            border-radius: 10px;
+            padding: 10px 12px;
             color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 12px;
         }
 
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #0b0f14;
-        }
-
-        .badge.green { background: var(--good); }
-        .badge.yellow { background: var(--warn); }
-        .badge.red { background: var(--danger); }
+        .hidden { display: none; }
 
         @media (max-width: 720px) {
             .form-grid { grid-template-columns: 1fr; }
@@ -207,67 +246,64 @@
                 <div class="subtle">Registro activo de ingresos y gastos para tu estabilidad financiera.</div>
             </div>
             <div class="actions">
-                <button class="secondary" onclick="irAlChatbot()">💬 Asesor Financiero</button>
-                <button class="secondary" onclick="irAlSimulador()">🏦 Simulador de Crédito</button>
-                <button class="danger" onclick="logout()">Cerrar sesión</button>
+                <button class="secondary" onclick="irAlChatbot()">Asesor financiero</button>
+                <button class="secondary" onclick="irAlSimulador()">Simulador de credito</button>
+                <button class="secondary" onclick="irAMetas()">Metas de ahorro</button>
+                <button class="danger" onclick="logout()">Cerrar sesion</button>
             </div>
         </div>
 
         <div class="grid">
-            <div class="card">
-                <h2>Registro financiero diario</h2>
-                <form id="financeForm">
+            <div class="card" id="profileCard">
+                <h2>Ingreso mensual</h2>
+                <div class="note" id="profileNote">Para continuar necesitamos tu ingreso mensual.</div>
+                <div id="profileSummary" class="hidden">
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span>Ingreso mensual actual</span>
+                            <strong id="summaryIncome">$0</strong>
+                        </div>
+                    </div>
+                    <div style="margin-top: 12px;">
+                        <button class="secondary" id="editProfile">Editar informacion</button>
+                    </div>
+                </div>
+                <form id="profileForm" class="hidden">
                     <div class="form-grid">
                         <div>
-                            <label>Fecha del registro</label>
-                            <input type="date" id="recordDate" />
-                        </div>
-                        <div>
-                            <label>Ingresos (COP)</label>
-                            <input type="number" id="income" min="0" step="1000" required />
-                        </div>
-                        <div>
-                            <label>Gastos fijos (COP)</label>
-                            <input type="number" id="fixedExpenses" min="0" step="1000" required />
-                        </div>
-                        <div>
-                            <label>Gastos variables (COP)</label>
-                            <input type="number" id="variableExpenses" min="0" step="1000" required />
-                        </div>
-                        <div>
-                            <label>Pago mensual de deudas (COP)</label>
-                            <input type="number" id="debtPayment" min="0" step="1000" required />
-                        </div>
-                        <div>
-                            <label>Ahorro actual (COP)</label>
-                            <input type="number" id="savingsCurrent" min="0" step="1000" />
-                        </div>
-                        <div>
-                            <label>Meta de ahorro (COP)</label>
-                            <input type="number" id="goalAmount" min="0" step="1000" />
+                            <label>Ingreso mensual (COP)</label>
+                            <input type="number" id="monthlyIncome" min="0" step="1000" required />
                         </div>
                     </div>
                     <div style="margin-top: 14px;">
-                        <button type="submit">Guardar registro</button>
+                        <button type="submit">Guardar ingreso</button>
                     </div>
-                    <div class="status" id="formStatus"></div>
+                    <div class="status" id="profileStatus"></div>
                 </form>
             </div>
 
-            <div class="card">
+            <div class="card score-card">
                 <h2>Score de estabilidad financiera</h2>
-                <div class="score">
+                <div class="score-line">
                     <div class="score-value" id="scoreValue">--</div>
                     <div class="score-bar"><span id="scoreBar"></span></div>
                     <div id="scoreBadge"></div>
                 </div>
                 <div class="summary-grid">
                     <div class="summary-item">
-                        <span>Ingresos mensuales (estimado)</span>
-                        <strong id="monthlyIncome">$0</strong>
+                        <span>Ingresos mensuales</span>
+                        <strong id="monthlyIncomeLabel">$0</strong>
                     </div>
                     <div class="summary-item">
-                        <span>Gastos mensuales</span>
+                        <span>Gastos fijos (30 dias)</span>
+                        <strong id="monthlyFixed">$0</strong>
+                    </div>
+                    <div class="summary-item">
+                        <span>Gastos variables (30 dias)</span>
+                        <strong id="monthlyVariable">$0</strong>
+                    </div>
+                    <div class="summary-item">
+                        <span>Gastos (30 dias)</span>
                         <strong id="monthlyExpenses">$0</strong>
                     </div>
                     <div class="summary-item">
@@ -278,29 +314,59 @@
                         <span>Ahorro sugerido</span>
                         <strong id="recommendedSaving">$0</strong>
                     </div>
-                    <div class="summary-item">
-                        <span>Meta de ahorro</span>
-                        <strong id="goalSummary">--</strong>
-                    </div>
-                    <div class="summary-item">
-                        <span>Meses estimados</span>
-                        <strong id="goalMonths">--</strong>
-                    </div>
                 </div>
                 <div class="status" id="summaryStatus"></div>
             </div>
         </div>
 
+        <div class="grid" style="margin-top: 16px;">
+            <div class="card">
+                <h2>Registro diario</h2>
+                <div class="note">Registra tu gasto diario y en que lo realizaste.</div>
+                <form id="dailyForm">
+                    <div class="form-grid">
+                        <div>
+                            <label>Fecha</label>
+                            <input type="date" id="dailyDate" />
+                        </div>
+                        <div>
+                            <label>Gasto del dia (COP)</label>
+                            <input type="number" id="dailyExpenses" min="0" step="1000" required />
+                        </div>
+                        <div>
+                            <label>Tipo de gasto</label>
+                            <select id="dailyExpenseType" required>
+                                <option value="">Selecciona</option>
+                                <option value="fixed">Fijo</option>
+                                <option value="variable">Variable</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Categoria</label>
+                            <input type="text" id="dailyCategory" placeholder="Ej: Alimentacion" required />
+                        </div>
+                        <div>
+                            <label>Descripcion (opcional)</label>
+                            <input type="text" id="dailyNote" placeholder="Ej: Mercado semana" />
+                        </div>
+                    </div>
+                    <div style="margin-top: 14px;">
+                        <button type="submit">Guardar registro diario</button>
+                    </div>
+                    <div class="status" id="dailyStatus"></div>
+                </form>
+            </div>
+        </div>
+
         <div class="card" style="margin-top: 16px;">
-            <h2>Historial reciente</h2>
+            <h2>Historial diario reciente</h2>
             <table class="table" id="recordsTable">
                 <thead>
                     <tr>
                         <th>Fecha</th>
-                        <th>Ingresos</th>
-                        <th>Gastos fijos</th>
-                        <th>Gastos variables</th>
-                        <th>Deudas</th>
+                        <th>Tipo</th>
+                        <th>Categoria</th>
+                        <th>Gasto</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -310,15 +376,13 @@
 
     <script>
         const user = JSON.parse(localStorage.getItem("user"));
-
         if (!user) {
             window.location.href = "/static/index.html";
         }
 
         document.getElementById("username").innerText = user.name || "Usuario";
 
-        const recordDate = document.getElementById("recordDate");
-        recordDate.valueAsDate = new Date();
+        document.getElementById("dailyDate").valueAsDate = new Date();
 
         const formatMoney = (value) =>
             new Intl.NumberFormat("es-CO", {
@@ -327,8 +391,72 @@
                 maximumFractionDigits: 0,
             }).format(value || 0);
 
-        function badge(label, color) {
-            return `<span class="badge ${color}">${label}</span>`;
+        const badge = (label, color) => `<span class="badge ${color}">${label}</span>`;
+
+        function setFormDisabled(formId, disabled) {
+            const form = document.getElementById(formId);
+            if (!form) {
+                return;
+            }
+            const elements = form.querySelectorAll("input, select, button");
+            elements.forEach((el) => {
+                if (el.type === "submit" || el.tagName === "INPUT" || el.tagName === "SELECT") {
+                    el.disabled = disabled;
+                }
+            });
+        }
+
+        function updateScoreBar(score, color) {
+            const valueEl = document.getElementById("scoreValue");
+            const barEl = document.getElementById("scoreBar");
+            const safeScore = Number.isFinite(score) ? score : 0;
+            valueEl.textContent = safeScore;
+            barEl.style.width = `${safeScore}%`;
+            barEl.style.background = color === "green" ? "var(--good)" : color === "yellow" ? "var(--warn)" : "var(--danger)";
+        }
+
+        function setProfileView(mode) {
+            const summary = document.getElementById("profileSummary");
+            const form = document.getElementById("profileForm");
+            if (mode === "summary") {
+                summary.classList.remove("hidden");
+                form.classList.add("hidden");
+            } else {
+                summary.classList.add("hidden");
+                form.classList.remove("hidden");
+            }
+        }
+
+        async function loadProfile() {
+            const statusEl = document.getElementById("profileStatus");
+            const noteEl = document.getElementById("profileNote");
+            try {
+                const res = await fetch(`/finance/profile?user_id=${user.id}`);
+                const data = await res.json();
+
+                if (!res.ok) {
+                    statusEl.textContent = data.detail || "No se pudo cargar";
+                    return;
+                }
+
+                if (!data.has_profile) {
+                    noteEl.textContent = "Para continuar necesitamos tu ingreso mensual.";
+                    if (data.suggested_income) {
+                        document.getElementById("monthlyIncome").value = data.suggested_income;
+                    }
+                    setProfileView("form");
+                    setFormDisabled("dailyForm", true);
+                    return;
+                }
+
+                document.getElementById("monthlyIncome").value = data.profile.monthly_income;
+                document.getElementById("summaryIncome").textContent = formatMoney(data.profile.monthly_income);
+                noteEl.textContent = "Ingreso mensual guardado. Puedes editarlo cuando lo necesites.";
+                setProfileView("summary");
+                setFormDisabled("dailyForm", false);
+            } catch (e) {
+                statusEl.textContent = "Error al cargar";
+            }
         }
 
         async function loadSummary() {
@@ -338,54 +466,42 @@
                 const data = await res.json();
 
                 if (!res.ok) {
-                    statusEl.textContent = data.detail || "No se pudo cargar el resumen";
+                    statusEl.textContent = data.detail || "No se pudo cargar";
                     return;
                 }
 
-                if (!data.has_records) {
-                    statusEl.textContent = "Agrega un registro para ver tu score.";
+                if (!data.has_profile) {
+                    statusEl.textContent = "Completa tu ingreso mensual para ver el score.";
+                    updateScoreBar(0, "red");
+                    document.getElementById("scoreBadge").innerHTML = badge("Sin datos", "red");
                     return;
                 }
 
-                document.getElementById("monthlyIncome").textContent = formatMoney(data.monthly_income);
+                document.getElementById("monthlyIncomeLabel").textContent = formatMoney(data.monthly_income);
+                document.getElementById("monthlyFixed").textContent = formatMoney(data.monthly_fixed);
+                document.getElementById("monthlyVariable").textContent = formatMoney(data.monthly_variable);
                 document.getElementById("monthlyExpenses").textContent = formatMoney(data.monthly_expenses);
                 document.getElementById("savingsCapacity").textContent = formatMoney(data.savings_capacity);
                 document.getElementById("recommendedSaving").textContent = formatMoney(data.recommended_saving);
-                document.getElementById("goalSummary").textContent = data.goal_amount
-                    ? formatMoney(data.goal_amount)
-                    : "--";
-                document.getElementById("goalMonths").textContent = data.goal_months
-                    ? `${data.goal_months} meses`
-                    : "--";
 
-                const score = Math.round(data.score);
-                document.getElementById("scoreValue").textContent = score;
-                document.getElementById("scoreBar").style.width = `${score}%`;
-                document.getElementById("scoreBar").style.background =
-                    data.score_color === "green"
-                        ? "var(--good)"
-                        : data.score_color === "yellow"
-                            ? "var(--warn)"
-                            : "var(--danger)";
+                updateScoreBar(Math.round(data.score), data.score_color);
 
-                const badgeLabel =
-                    data.score_color === "green"
-                        ? "Estable"
-                        : data.score_color === "yellow"
-                            ? "En riesgo"
-                            : "Crítico";
+                const badgeLabel = data.score_color === "green" ? "Estable" : data.score_color === "yellow" ? "En riesgo" : "Critico";
                 document.getElementById("scoreBadge").innerHTML = badge(badgeLabel, data.score_color);
-                statusEl.textContent = `Datos calculados con registros de ${data.period_days} días.`;
+                statusEl.textContent = data.has_records
+                    ? "Score calculado con los ultimos 30 dias de registros."
+                    : "Score inicial 100. Registra gastos diarios para ajustarlo.";
+
             } catch (e) {
-                statusEl.textContent = "Error al cargar el resumen";
+                statusEl.textContent = "Error al cargar";
             }
         }
 
-        async function loadRecords() {
+        async function loadDailyRecords() {
             const tableBody = document.querySelector("#recordsTable tbody");
             tableBody.innerHTML = "";
             try {
-                const res = await fetch(`/finance/records?user_id=${user.id}&limit=7`);
+                const res = await fetch(`/finance/daily?user_id=${user.id}&limit=7`);
                 const data = await res.json();
                 if (!res.ok) {
                     return;
@@ -395,10 +511,9 @@
                     const row = document.createElement("tr");
                     row.innerHTML = `
                         <td>${record.record_date}</td>
-                        <td>${formatMoney(record.income)}</td>
-                        <td>${formatMoney(record.fixed_expenses)}</td>
-                        <td>${formatMoney(record.variable_expenses)}</td>
-                        <td>${formatMoney(record.debt_payment)}</td>
+                        <td>${record.expense_type === "fixed" ? "Fijo" : "Variable"}</td>
+                        <td>${record.category || "-"}</td>
+                        <td>${formatMoney(record.expenses)}</td>
                     `;
                     tableBody.appendChild(row);
                 });
@@ -407,23 +522,17 @@
             }
         }
 
-        document.getElementById("financeForm").addEventListener("submit", async (event) => {
+        document.getElementById("profileForm").addEventListener("submit", async (event) => {
             event.preventDefault();
-            const statusEl = document.getElementById("formStatus");
+            const statusEl = document.getElementById("profileStatus");
 
             const payload = {
                 user_id: user.id,
-                record_date: recordDate.value,
-                income: Number(document.getElementById("income").value),
-                fixed_expenses: Number(document.getElementById("fixedExpenses").value),
-                variable_expenses: Number(document.getElementById("variableExpenses").value),
-                debt_payment: Number(document.getElementById("debtPayment").value),
-                savings_current: Number(document.getElementById("savingsCurrent").value || 0),
-                goal_amount: Number(document.getElementById("goalAmount").value || 0),
+                monthly_income: Number(document.getElementById("monthlyIncome").value),
             };
 
             try {
-                const res = await fetch("/finance/record", {
+                const res = await fetch("/finance/profile", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload),
@@ -434,13 +543,51 @@
                     return;
                 }
 
-                statusEl.textContent = "Registro guardado ✅";
+                statusEl.textContent = "Ingreso mensual guardado ✅";
+                await loadProfile();
                 await loadSummary();
-                await loadRecords();
             } catch (e) {
-                statusEl.textContent = "Error de conexión";
+                statusEl.textContent = "Error de conexion";
             }
         });
+
+        document.getElementById("dailyForm").addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const statusEl = document.getElementById("dailyStatus");
+
+            const payload = {
+                user_id: user.id,
+                record_date: document.getElementById("dailyDate").value,
+                expenses: Number(document.getElementById("dailyExpenses").value),
+                expense_type: document.getElementById("dailyExpenseType").value,
+                category: document.getElementById("dailyCategory").value,
+                note: document.getElementById("dailyNote").value,
+            };
+
+            try {
+                const res = await fetch("/finance/daily", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    statusEl.textContent = data.detail || "No se pudo guardar";
+                    return;
+                }
+
+                statusEl.textContent = "Registro diario guardado ✅";
+                document.getElementById("dailyExpenses").value = "";
+                document.getElementById("dailyExpenseType").value = "";
+                document.getElementById("dailyCategory").value = "";
+                document.getElementById("dailyNote").value = "";
+                await loadDailyRecords();
+                await loadSummary();
+            } catch (e) {
+                statusEl.textContent = "Error de conexion";
+            }
+        });
+
 
         function irAlChatbot() {
             window.location.href = "/static/chatbot.html";
@@ -450,13 +597,23 @@
             window.location.href = "/static/simulator.html";
         }
 
+        function irAMetas() {
+            window.location.href = "/static/savings.html";
+        }
+
         function logout() {
             localStorage.removeItem("user");
             window.location.href = "/static/index.html";
         }
 
+        loadProfile();
         loadSummary();
-        loadRecords();
+        loadDailyRecords();
+
+        document.getElementById("editProfile").addEventListener("click", (event) => {
+            event.preventDefault();
+            setProfileView("form");
+        });
     </script>
 </body>
 </html>

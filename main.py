@@ -3,11 +3,11 @@ from app.routes import user_route
 from app.routes import chatbot_route
 from app.routes import simulator_route
 from app.routes import finance_route
-from app.database.database import engine, Base
+from app.database.database import engine, Base, ensure_schema
 from app.models.user_model import User
 from app.models.profile_model import UserProfile
 from app.models.conversation_model import ConversationMessage
-from app.models.finance_model import FinanceRecord
+from app.models.finance_model import FinanceProfile, DailyRecord, SavingsGoal, SavingsCheckin
 from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi.responses import HTMLResponse
@@ -26,6 +26,7 @@ app.add_middleware(
 )   
 
 Base.metadata.create_all(bind=engine)
+ensure_schema()
 
 app.include_router(user_route.router, prefix="/users")
 app.include_router(chatbot_route.router, prefix="/chatbot")
