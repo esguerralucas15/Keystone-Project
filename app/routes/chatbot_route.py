@@ -6,8 +6,9 @@ from app.database.database import SessionLocal
 from app.models.user_model import User
 from app.models.profile_model import UserProfile
 from app.models.conversation_model import ConversationMessage, ConversationSession
+from app.models.finance_model import FinanceProfile, DailyRecord, SavingsGoal, SavingsCheckin
 from app.llm.google_llm_new import procesar_mensaje_chatbot, generar_recomendacion_inicial
-from datetime import datetime
+from datetime import datetime, date, timedelta
 
 router = APIRouter()
 
@@ -68,6 +69,34 @@ def _build_session_title(message: str) -> str:
     return recorte + "…"
 
 
+def _compute_score(monthly_income: float, fixed_expenses: float, variable_expenses: float):
+    if monthly_income <= 0:
+        return 0, "red"
+
+    total_expenses = fixed_expenses + variable_expenses
+    available = monthly_income - total_expenses
+
+    savings_rate = available / monthly_income
+    expense_ratio = total_expenses / monthly_income
+
+    savings_rate = max(min(savings_rate, 0.2), 0)
+    savings_score = (savings_rate / 0.2) * 50
+
+    expense_ratio = max(min(expense_ratio, 1), 0)
+    expense_score = (1 - expense_ratio) * 50
+
+    score = max(0, min(100, savings_score + expense_score))
+
+    if score >= 70:
+        color = "green"
+    elif score >= 40:
+        color = "yellow"
+    else:
+        color = "red"
+
+    return score, color
+
+
 @router.post("/message")
 def chatbot_message(payload: dict, db: Session = Depends(get_db)):
     """
@@ -95,7 +124,7 @@ def chatbot_message(payload: dict, db: Session = Depends(get_db)):
 
     session_id = payload.get("session_id")
 
-    # Obtener perfil financiero
+    # Obtener perfil financiero (encuesta)
     profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
 
     # Datos del usuario
@@ -111,6 +140,79 @@ def chatbot_message(payload: dict, db: Session = Depends(get_db)):
         }
 
     try:
+        # Obtener finanzas recientes (ingreso mensual y gastos diarios)
+        finance_profile = db.query(FinanceProfile).filter(FinanceProfile.user_id == user_id).first()
+        finance_data = {}
+        if finance_profile:
+            since_date = date.today() - timedelta(days=29)
+            records = db.query(DailyRecord).filter(
+                DailyRecord.user_id == user_id,
+                DailyRecord.record_date >= since_date,
+            ).all()
+
+            monthly_fixed = sum(r.expenses for r in records if r.expense_type == "fixed")
+            monthly_variable = sum(r.expenses for r in records if r.expense_type == "variable")
+            monthly_expenses = monthly_fixed + monthly_variable
+            savings_capacity = finance_profile.monthly_income - monthly_expenses
+            days_with_records = len({r.record_date for r in records})
+            last_record_date = max((r.record_date for r in records), default=None)
+
+            if records:
+                score, color = _compute_score(
+                    finance_profile.monthly_income,
+                    monthly_fixed,
+                    monthly_variable,
+                )
+                has_records = True
+            else:
+                score, color = 100, "green"
+                has_records = False
+
+            finance_data = {
+                "monthly_income": finance_profile.monthly_income,
+                "monthly_fixed": monthly_fixed,
+                "monthly_variable": monthly_variable,
+                "monthly_expenses": monthly_expenses,
+                "savings_capacity": savings_capacity,
+                "days_with_records": days_with_records,
+                "last_record_date": last_record_date.isoformat() if last_record_date else None,
+                "score": score,
+                "score_color": color,
+                "has_records": has_records,
+            }
+
+        # Metas de ahorro
+        goals = db.query(SavingsGoal).filter(
+            SavingsGoal.user_id == user_id
+        ).order_by(SavingsGoal.created_at.desc()).all()
+
+        goals_data = []
+        if goals:
+            for goal in goals:
+                total_saved = db.query(
+                    func.coalesce(func.sum(SavingsCheckin.saved_amount), 0)
+                ).filter(
+                    SavingsCheckin.goal_id == goal.id
+                ).scalar() or 0
+
+                progress = 0
+                if goal.target_amount > 0:
+                    progress = min(100, (total_saved / goal.target_amount) * 100)
+
+                remaining = max(goal.target_amount - total_saved, 0)
+                target_days = max(goal.target_months * 30, 1)
+                daily_target = goal.target_amount / target_days
+
+                goals_data.append({
+                    "id": goal.id,
+                    "title": goal.title,
+                    "target_amount": goal.target_amount,
+                    "target_months": goal.target_months,
+                    "total_saved": total_saved,
+                    "progress": progress,
+                    "remaining": remaining,
+                    "daily_target": daily_target,
+                })
         # Obtener o crear sesion
         session = None
         if session_id:
@@ -151,7 +253,15 @@ def chatbot_message(payload: dict, db: Session = Depends(get_db)):
         ]
 
         # Procesar mensaje
-        resultado = procesar_mensaje_chatbot(user_id, message, user_data, profile_data, historial_conversacion)
+        resultado = procesar_mensaje_chatbot(
+            user_id,
+            message,
+            user_data,
+            profile_data,
+            historial_conversacion,
+            finance_data,
+            goals_data,
+        )
         
         if resultado.get("error"):
             raise HTTPException(status_code=400, detail=resultado["error"])

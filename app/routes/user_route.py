@@ -115,3 +115,19 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Usuario eliminado correctamente 🗑️"}
+
+
+@router.get("/profile/{user_id}")
+def get_profile(user_id: int, db: Session = Depends(get_db)):
+    profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Perfil no encontrado")
+
+    return {
+        "user_id": user_id,
+        "profile": {
+            c.name: getattr(profile, c.name)
+            for c in profile.__table__.columns
+            if c.name not in ("id", "user_id")
+        }
+    }

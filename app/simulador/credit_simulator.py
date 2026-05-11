@@ -19,16 +19,23 @@ def tasa_mensual_desde_tea(tea_pct: float) -> float:
     return round(((1 + i) ** (1 / 12) - 1) * 100, 4)
 
 
+def tea_desde_mensual(tasa_mensual_pct: float) -> float:
+    """Convierte tasa mensual (%) a Tasa Efectiva Anual (%)."""
+    i = tasa_mensual_pct / 100
+    return round(((1 + i) ** 12 - 1) * 100, 4)
+
+
 PRODUCTOS = {
     101: {
         "banco_id": 1,
         "nombre": "Libre Inversion - Tasa fija, cuota fija",
         "categoria": "consumo",
         "tasa_mensual": 1.78,
-        "tea_ref": 23.14,
+        "tea_ref": tea_desde_mensual(1.78),
         "cuota_tipo": "fija",
         "seguro_tipo": "fijo",
         "seguro_valor": 23027,
+        "seguro_incluido": True,
         "seguro_opcional": False,
         "tasa_editable": False,
         "monto_min": 1_000_000,
@@ -38,17 +45,18 @@ PRODUCTOS = {
         "edad_min": 18,
         "edad_max": 84,
         "ingreso_min": None,
-        "nota": "Tasa fija con cuota fija. Seguro de vida mensual fijo.",
+        "nota": "Permite pagos extraordinarios y cancelacion anticipada sin sancion.",
     },
     102: {
         "banco_id": 1,
         "nombre": "Libre Inversion - Tasa variable, cuota fija",
         "categoria": "consumo",
         "tasa_mensual": 1.84,
-        "tea_ref": 24.59,
+        "tea_ref": tea_desde_mensual(1.84),
         "cuota_tipo": "fija",
         "seguro_tipo": "fijo",
         "seguro_valor": 22742,
+        "seguro_incluido": True,
         "seguro_opcional": False,
         "tasa_editable": False,
         "monto_min": 1_000_000,
@@ -58,17 +66,18 @@ PRODUCTOS = {
         "edad_min": 18,
         "edad_max": 84,
         "ingreso_min": None,
-        "nota": "Tasa variable con cuota fija. Seguro de vida mensual fijo.",
+        "nota": "Permite pagos extraordinarios y cancelacion anticipada sin sancion.",
     },
     103: {
         "banco_id": 1,
         "nombre": "Libre Inversion - Tasa variable, cuota variable",
         "categoria": "consumo",
         "tasa_mensual": 1.84,
-        "tea_ref": 24.59,
+        "tea_ref": tea_desde_mensual(1.84),
         "cuota_tipo": "variable",
         "seguro_tipo": "fijo",
         "seguro_valor": 18288,
+        "seguro_incluido": True,
         "seguro_opcional": False,
         "tasa_editable": False,
         "monto_min": 1_000_000,
@@ -78,7 +87,29 @@ PRODUCTOS = {
         "edad_min": 18,
         "edad_max": 84,
         "ingreso_min": None,
-        "nota": "Tasa variable con cuota variable. Seguro de vida mensual fijo.",
+        "nota": "Permite pagos extraordinarios y cancelacion anticipada sin sancion.",
+    },
+    104: {
+        "banco_id": 1,
+        "nombre": "Credito de Libranza",
+        "categoria": "consumo",
+        "tasa_mensual": 1.84,
+        "tea_ref": tea_desde_mensual(1.84),
+        "cuota_tipo": "fija",
+        "seguro_tipo": "none",
+        "seguro_valor": 0,
+        "seguro_incluido": True,
+        "seguro_opcional": False,
+        "tasa_editable": False,
+        "monto_min": 1_000_000,
+        "monto_max": 200_000_000,
+        "plazo_min": 72,
+        "plazo_max": 96,
+        "edad_min": None,
+        "edad_max": None,
+        "ingreso_min": None,
+        "max_cuota_ratio": 0.5,
+        "nota": "Debes conservar al menos el 50% del salario neto.",
     },
     201: {
         "banco_id": 2,
@@ -89,6 +120,7 @@ PRODUCTOS = {
         "cuota_tipo": "fija",
         "seguro_tipo": "none",
         "seguro_valor": 0,
+        "seguro_incluido": True,
         "seguro_opcional": False,
         "tasa_editable": False,
         "monto_min": 400_000,
@@ -98,7 +130,7 @@ PRODUCTOS = {
         "edad_min": 18,
         "edad_max": 69,
         "ingreso_min": 1_423_500,
-        "nota": "Tasa fija mes vencido. Seguro de vida obligatorio no incluido en el calculo.",
+        "nota": "Cuota fija y permite pagos extraordinarios o cancelacion total sin cobros adicionales.",
     },
     202: {
         "banco_id": 2,
@@ -133,10 +165,11 @@ PRODUCTOS = {
         "tasa_mensual": tasa_mensual_desde_tea(26.70),
         "tea_ref": 26.70,
         "cuota_tipo": "fija",
-        "seguro_tipo": "porcentaje",
-        "seguro_valor": SEGURO_PORCENTAJE_ESTIMADO,
-        "seguro_opcional": True,
-        "tasa_editable": True,
+        "seguro_tipo": "none",
+        "seguro_valor": 0,
+        "seguro_incluido": True,
+        "seguro_opcional": False,
+        "tasa_editable": False,
         "monto_min": 1_000_000,
         "monto_max": 500_000_000,
         "plazo_min": 6,
@@ -144,7 +177,7 @@ PRODUCTOS = {
         "edad_min": None,
         "edad_max": None,
         "ingreso_min": None,
-        "nota": "La tasa es referencial. Puedes editarla. Seguro opcional estimado.",
+        "nota": "Tasa referencial. Resultados aproximados.",
     },
     302: {
         "banco_id": 3,
@@ -153,10 +186,11 @@ PRODUCTOS = {
         "tasa_mensual": tasa_mensual_desde_tea(26.20),
         "tea_ref": 26.20,
         "cuota_tipo": "fija",
-        "seguro_tipo": "porcentaje",
-        "seguro_valor": SEGURO_PORCENTAJE_ESTIMADO,
-        "seguro_opcional": True,
-        "tasa_editable": True,
+        "seguro_tipo": "none",
+        "seguro_valor": 0,
+        "seguro_incluido": True,
+        "seguro_opcional": False,
+        "tasa_editable": False,
         "monto_min": 1_000_000,
         "monto_max": 500_000_000,
         "plazo_min": 6,
@@ -164,19 +198,19 @@ PRODUCTOS = {
         "edad_min": None,
         "edad_max": None,
         "ingreso_min": None,
-        "nota": "La tasa es referencial. Puedes editarla. Seguro opcional estimado.",
+        "nota": "Tasa referencial. Resultados aproximados.",
     },
 }
 
 BANCOS = {
     1: {
         "nombre": "Bancolombia",
-        "descripcion": "Credito Libre Inversion (18-84 anos).",
-        "productos": [101, 102, 103],
+        "descripcion": "Libre Inversion y Libranza.",
+        "productos": [101, 102, 103, 104],
     },
     2: {
         "nombre": "Banco de Bogota",
-        "descripcion": "Libre Destino y Vivienda.",
+        "descripcion": "Credito Libre Destino y Vivienda.",
         "productos": [201, 202, 203],
     },
     3: {
@@ -209,12 +243,6 @@ def calcular_capital(cuota: float, tasa_mensual: float, n_meses: int) -> float:
         return cuota * n
     capital = cuota * ((1 + i) ** n - 1) / (i * (1 + i) ** n)
     return round(capital, 0)
-
-
-def tea_desde_mensual(tasa_mensual_pct: float) -> float:
-    """Convierte tasa mensual (%) a Tasa Efectiva Anual (%)."""
-    i = tasa_mensual_pct / 100
-    return round(((1 + i) ** 12 - 1) * 100, 4)
 
 
 def generar_tabla_amortizacion(
@@ -294,8 +322,10 @@ def _producto_publico(producto_id: int) -> dict:
             "cuota_tipo": producto.get("cuota_tipo"),
             "seguro_tipo": producto.get("seguro_tipo"),
             "seguro_valor": producto.get("seguro_valor"),
+            "seguro_incluido": producto.get("seguro_incluido", False),
             "seguro_opcional": producto.get("seguro_opcional", False),
             "tasa_editable": producto.get("tasa_editable", False),
+            "max_cuota_ratio": producto.get("max_cuota_ratio"),
         })
     else:
         base.update({
@@ -360,6 +390,9 @@ def _validar_requisitos(producto: dict, edad: int | None, ingreso: float | None)
             return "Debes ingresar tu ingreso mensual para este producto"
         if ingreso < producto["ingreso_min"]:
             return f"Ingreso minimo ${producto['ingreso_min']:,.0f}"
+
+    if producto.get("max_cuota_ratio") is not None and ingreso is None:
+        return "Debes ingresar tu ingreso mensual para validar la libranza"
 
     return None
 
@@ -430,6 +463,12 @@ def simular_credito_ruta_a(
         seguro_mensual = 0
 
     cuota_total = round(cuota_base + seguro_mensual, 0)
+
+    max_ratio = producto.get("max_cuota_ratio")
+    if max_ratio is not None and ingreso_mensual is not None:
+        if cuota_total > ingreso_mensual * max_ratio:
+            limite = ingreso_mensual * max_ratio
+            return {"error": f"La cuota supera el {int(max_ratio * 100)}% de tu ingreso (${limite:,.0f})"}
     total_pago_base = round(cuota_base * plazo, 0)
     total_interes = round(total_pago_base - capital, 0)
     seguro_estimado = _seguro_total_estimado(producto, capital, plazo, incluye_seguro)
@@ -510,6 +549,12 @@ def simular_credito_ruta_b(
     cuota_base = cuota_usuario - seguro_mensual
     if cuota_base <= 0:
         return {"error": "La cuota no alcanza para cubrir el seguro mensual"}
+
+    max_ratio = producto.get("max_cuota_ratio")
+    if max_ratio is not None and ingreso_mensual is not None:
+        if cuota_usuario > ingreso_mensual * max_ratio:
+            limite = ingreso_mensual * max_ratio
+            return {"error": f"La cuota supera el {int(max_ratio * 100)}% de tu ingreso (${limite:,.0f})"}
 
     capital = calcular_capital(cuota_base, tasa_d, plazo)
 

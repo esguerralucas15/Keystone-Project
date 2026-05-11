@@ -5,30 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Metas de Ahorro - EquiFinance</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;500;700&family=DM+Mono:wght@400&display=swap');
 
         :root {
             --bg: #0b0f14;
             --panel: #121a26;
-            --border: #243043;
+            --panel-2: #0f1724;
+            --border: #223044;
             --text: #e6edf3;
-            --muted: #8fa1b3;
-            --accent: #38bdf8;
+            --muted: #91a4b7;
+            --accent: #22d3ee;
+            --accent-2: #34d399;
+            --warn: #f59e0b;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: 'Sora', sans-serif;
             color: var(--text);
-            background: radial-gradient(circle at top, #1b263a, #0b0f14 65%);
+            background: radial-gradient(circle at 10% 10%, #1b2a3e, #0b0f14 60%);
             min-height: 100vh;
             padding: 28px 20px 40px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            width: 360px;
+            height: 360px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
+            filter: blur(10px);
+            z-index: 0;
+        }
+
+        body::before {
+            top: -120px;
+            right: -80px;
+        }
+
+        body::after {
+            bottom: -140px;
+            left: -120px;
+            background: radial-gradient(circle, rgba(52, 211, 153, 0.2), transparent 70%);
         }
 
         .container {
-            max-width: 960px;
+            max-width: 1100px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
 
         .header {
@@ -36,47 +66,507 @@
             align-items: center;
             justify-content: space-between;
             gap: 16px;
-            margin-bottom: 18px;
+            margin-bottom: 24px;
         }
 
-        h1 { font-size: 26px; font-weight: 600; }
+        h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+        .subtle { color: var(--muted); font-size: 14px; }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
 
         button {
             padding: 10px 18px;
             border: none;
             border-radius: 10px;
             background: var(--accent);
-            color: #03101c;
+            color: #04111b;
             cursor: pointer;
             font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 25px rgba(34, 211, 238, 0.25);
+        }
+
+        button.secondary {
+            background: #1d2838;
+            color: var(--text);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
         }
 
         .card {
             background: var(--panel);
             border: 1px solid var(--border);
-            border-radius: 14px;
+            border-radius: 16px;
             padding: 20px;
+            box-shadow: 0 20px 60px rgba(5, 12, 24, 0.45);
+        }
+
+        .card h2 { font-size: 18px; margin-bottom: 10px; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--panel-2);
+            color: var(--text);
+            font-family: 'DM Mono', monospace;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.2);
         }
 
         .note {
             color: var(--muted);
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
+        }
+
+        .summary-item {
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .summary-item span {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+
+        .summary-item strong {
+            font-size: 16px;
+        }
+
+        .goal-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .goal-card {
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            animation: fadeUp 0.6s ease both;
+        }
+
+        .goal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(52, 211, 153, 0.15);
+            color: var(--accent-2);
+        }
+
+        .progress {
+            width: 100%;
+            height: 10px;
+            border-radius: 999px;
+            background: #1b2636;
+            overflow: hidden;
+        }
+
+        .progress span {
+            display: block;
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            transition: width 0.6s ease;
+        }
+
+        .goal-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+        }
+
+        .stat {
+            background: #0f1724;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 12px;
+        }
+
+        .stat strong {
+            display: block;
             font-size: 14px;
-            margin-top: 10px;
+            margin-top: 4px;
+        }
+
+        .checkin-list {
+            display: grid;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .checkin-item {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(34, 48, 68, 0.6);
+            padding-bottom: 4px;
+        }
+
+        .status {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .hidden { display: none; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 720px) {
+            .header { flex-direction: column; align-items: flex-start; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Metas de Ahorro</h1>
-            <button onclick="window.location.href='/static/dashboard.html'">← Volver</button>
+            <div>
+                <h1>Metas de Ahorro</h1>
+                <div class="subtle">Crea metas, registra aportes diarios y sigue tu progreso.</div>
+            </div>
+            <div class="actions">
+                <button class="secondary" onclick="window.location.href='/static/dashboard.html'">← Volver</button>
+            </div>
         </div>
 
-        <div class="card">
-            <h2>Estamos ajustando este modulo</h2>
-            <p class="note">Aqui podras crear y dar seguimiento a tus metas de ahorro. En el siguiente paso lo dejaremos completo.
-            Si tienes dudas sobre cuanto ahorrar, consulta el chat y vuelve para registrar tu meta.</p>
+        <div class="grid">
+            <div class="card">
+                <h2>Nueva meta</h2>
+                <form id="goalForm">
+                    <div class="form-grid">
+                        <div>
+                            <label>Nombre de la meta</label>
+                            <input type="text" id="goalTitle" placeholder="Ej: Fondo de emergencia" required>
+                        </div>
+                        <div>
+                            <label>Monto objetivo (COP)</label>
+                            <input type="text" id="goalAmount" inputmode="numeric" placeholder="Ej: 1.000.000" required>
+                        </div>
+                        <div>
+                            <label>Plazo (meses)</label>
+                            <input type="number" id="goalMonths" min="1" step="1" required>
+                        </div>
+                    </div>
+                    <div style="margin-top: 12px;">
+                        <button type="submit" id="createGoalBtn">Crear meta</button>
+                    </div>
+                    <div class="status" id="goalStatus"></div>
+                </form>
+                <p class="note">Cada meta calcula un ahorro diario sugerido para llegar a tiempo.</p>
+            </div>
+            <div class="card">
+                <h2>Resumen rapido</h2>
+                <div class="summary" id="summaryGrid">
+                    <div class="summary-item">
+                        <span>Metas activas</span>
+                        <strong id="summaryGoals">0</strong>
+                    </div>
+                    <div class="summary-item">
+                        <span>Ahorro acumulado</span>
+                        <strong id="summarySaved">$0</strong>
+                    </div>
+                    <div class="summary-item">
+                        <span>Progreso promedio</span>
+                        <strong id="summaryProgress">0%</strong>
+                    </div>
+                </div>
+                <p class="note" id="summaryNote">Registra aportes para ver tu avance diario.</p>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 16px;">
+            <h2>Tus metas</h2>
+            <div class="goal-list" id="goalsList"></div>
+            <p class="note" id="emptyState">Aun no tienes metas. Crea tu primera meta para empezar.</p>
         </div>
     </div>
+
+    <script>
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user) {
+            window.location.href = "/static/index.html";
+        }
+
+        const formatMoney = (value) =>
+            new Intl.NumberFormat("es-CO", {
+                style: "currency",
+                currency: "COP",
+                maximumFractionDigits: 0,
+            }).format(value || 0);
+
+        const formatDate = (iso) => {
+            if (!iso) return "-";
+            const date = new Date(iso);
+            if (Number.isNaN(date.getTime())) return iso;
+            return date.toLocaleDateString("es-CO");
+        };
+
+        async function loadGoals() {
+            const listEl = document.getElementById("goalsList");
+            const emptyEl = document.getElementById("emptyState");
+            listEl.innerHTML = "";
+
+            try {
+                const res = await fetch(`/finance/goals?user_id=${user.id}`);
+                const data = await res.json();
+                if (!res.ok) {
+                    emptyEl.textContent = data.detail || "No se pudieron cargar las metas";
+                    emptyEl.classList.remove("hidden");
+                    return;
+                }
+
+                const goals = data.goals || [];
+                if (!goals.length) {
+                    emptyEl.classList.remove("hidden");
+                    updateSummary([]);
+                    return;
+                }
+
+                emptyEl.classList.add("hidden");
+                updateSummary(goals);
+
+                goals.forEach((goal, index) => {
+                    const card = document.createElement("div");
+                    card.className = "goal-card";
+                    card.style.animationDelay = `${index * 0.05}s`;
+                    card.innerHTML = `
+                        <div class="goal-header">
+                            <h3>${goal.title}</h3>
+                            <span class="badge">${Math.round(goal.progress)}%</span>
+                        </div>
+                        <div class="progress"><span style="width: ${Math.min(goal.progress, 100)}%"></span></div>
+                        <div class="goal-stats">
+                            <div class="stat"><span>Objetivo</span><strong>${formatMoney(goal.target_amount)}</strong></div>
+                            <div class="stat"><span>Ahorrado</span><strong>${formatMoney(goal.total_saved)}</strong></div>
+                            <div class="stat"><span>Faltante</span><strong>${formatMoney(goal.remaining)}</strong></div>
+                            <div class="stat"><span>Diario sugerido</span><strong>${formatMoney(goal.daily_target)}</strong></div>
+                        </div>
+                        <form class="checkin-form" data-goal-id="${goal.id}">
+                            <div class="form-grid">
+                                <div>
+                                    <label>Aporte (COP)</label>
+                                    <input type="text" name="amount" inputmode="numeric" placeholder="Ej: 50.000" required>
+                                </div>
+                                <div>
+                                    <label>Fecha</label>
+                                    <input type="date" name="date" required>
+                                </div>
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <button type="submit">Registrar aporte</button>
+                            </div>
+                            <div class="status"></div>
+                        </form>
+                        <div class="checkin-list" id="checkins-${goal.id}"></div>
+                    `;
+                    listEl.appendChild(card);
+
+                    const dateInput = card.querySelector('input[name="date"]');
+                    if (dateInput) {
+                        dateInput.valueAsDate = new Date();
+                    }
+
+                    const form = card.querySelector(".checkin-form");
+                    form.addEventListener("submit", (event) => handleCheckinSubmit(event, goal.id));
+
+                    loadCheckins(goal.id);
+                });
+            } catch (e) {
+                emptyEl.textContent = "Error al cargar metas";
+                emptyEl.classList.remove("hidden");
+            }
+        }
+
+        function updateSummary(goals) {
+            const totalGoals = goals.length;
+            const totalSaved = goals.reduce((acc, goal) => acc + (goal.total_saved || 0), 0);
+            const avgProgress = totalGoals
+                ? goals.reduce((acc, goal) => acc + (goal.progress || 0), 0) / totalGoals
+                : 0;
+
+            document.getElementById("summaryGoals").textContent = totalGoals;
+            document.getElementById("summarySaved").textContent = formatMoney(totalSaved);
+            document.getElementById("summaryProgress").textContent = `${Math.round(avgProgress)}%`;
+
+            const note = document.getElementById("summaryNote");
+            if (!totalGoals) {
+                note.textContent = "Crea una meta para iniciar tu plan de ahorro.";
+            } else {
+                note.textContent = "Suma aportes diarios para mantener el ritmo.";
+            }
+        }
+
+        async function loadCheckins(goalId) {
+            const list = document.getElementById(`checkins-${goalId}`);
+            if (!list) return;
+            list.innerHTML = "";
+
+            try {
+                const res = await fetch(`/finance/goals/${goalId}/checkins?limit=5`);
+                const data = await res.json();
+                if (!res.ok) {
+                    list.innerHTML = "<div class=\"note\">No se pudieron cargar los aportes.</div>";
+                    return;
+                }
+
+                if (!data.checkins || !data.checkins.length) {
+                    list.innerHTML = "<div class=\"note\">Sin aportes registrados.</div>";
+                    return;
+                }
+
+                data.checkins.forEach((checkin) => {
+                    const item = document.createElement("div");
+                    item.className = "checkin-item";
+                    item.innerHTML = `
+                        <span>${formatDate(checkin.record_date)}</span>
+                        <strong>${formatMoney(checkin.saved_amount)}</strong>
+                    `;
+                    list.appendChild(item);
+                });
+            } catch (e) {
+                list.innerHTML = "<div class=\"note\">Error al cargar aportes.</div>";
+            }
+        }
+
+        document.getElementById("goalForm").addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const statusEl = document.getElementById("goalStatus");
+            statusEl.textContent = "Guardando...";
+
+            const payload = {
+                user_id: user.id,
+                title: document.getElementById("goalTitle").value.trim(),
+                target_amount: parseMoneyInput(document.getElementById("goalAmount").value),
+                target_months: Number(document.getElementById("goalMonths").value),
+            };
+
+            if (!payload.title || !payload.target_amount || !payload.target_months) {
+                statusEl.textContent = "Completa todos los campos";
+                return;
+            }
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+            try {
+                const res = await fetch("/finance/goals", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                    signal: controller.signal,
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    statusEl.textContent = data.detail || "No se pudo crear la meta";
+                    return;
+                }
+
+                statusEl.textContent = "Meta creada ✅";
+                document.getElementById("goalForm").reset();
+                await loadGoals();
+            } catch (e) {
+                statusEl.textContent = e.name === "AbortError"
+                    ? "Tiempo de espera agotado. Revisa el servidor."
+                    : "Error de conexion";
+            } finally {
+                clearTimeout(timeoutId);
+            }
+        });
+
+        async function handleCheckinSubmit(event, goalId) {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const statusEl = form.querySelector(".status");
+            const amount = parseMoneyInput(form.querySelector('input[name="amount"]').value);
+            const recordDate = form.querySelector('input[name="date"]').value;
+
+            if (!amount || !recordDate) {
+                statusEl.textContent = "Completa el aporte y la fecha";
+                return;
+            }
+
+            try {
+                const res = await fetch(`/finance/goals/${goalId}/checkin`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        saved_amount: amount,
+                        record_date: recordDate,
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    statusEl.textContent = data.detail || "No se pudo registrar";
+                    return;
+                }
+
+                statusEl.textContent = "Aporte registrado ✅";
+                form.querySelector('input[name="amount"]').value = "";
+                await loadGoals();
+            } catch (e) {
+                statusEl.textContent = "Error de conexion";
+            }
+        }
+
+        loadGoals();
+    </script>
 </body>
 </html>

@@ -46,27 +46,15 @@ def _compute_score(monthly_income: float, fixed_expenses: float, variable_expens
     total_expenses = fixed_expenses + variable_expenses
     available = monthly_income - total_expenses
 
-    savings_rate = max(available, 0) / monthly_income
-    expense_ratio = (fixed_expenses + variable_expenses) / monthly_income
-    if savings_rate >= 0.2:
-        savings_score = 50
-    elif savings_rate >= 0.1:
-        savings_score = 40
-    elif savings_rate >= 0.05:
-        savings_score = 30
-    elif savings_rate >= 0:
-        savings_score = 20
-    else:
-        savings_score = 0
+    savings_rate = available / monthly_income
+    expense_ratio = total_expenses / monthly_income
 
-    if expense_ratio <= 0.5:
-        expense_score = 50
-    elif expense_ratio <= 0.7:
-        expense_score = 40
-    elif expense_ratio <= 0.9:
-        expense_score = 20
-    else:
-        expense_score = 0
+    # Score continuo para reflejar cambios graduales
+    savings_rate = max(min(savings_rate, 0.2), 0)
+    savings_score = (savings_rate / 0.2) * 50
+
+    expense_ratio = max(min(expense_ratio, 1), 0)
+    expense_score = (1 - expense_ratio) * 50
 
     score = max(0, min(100, savings_score + expense_score))
 
@@ -384,6 +372,35 @@ def list_goals(user_id: int, db: Session = Depends(get_db)):
         })
 
     return {"user_id": user_id, "goals": serialized}
+
+
+@router.get("/goals/{goal_id}/checkins")
+def list_checkins(goal_id: int, limit: int = 10, db: Session = Depends(get_db)):
+    if limit <= 0:
+        limit = 10
+
+    goal = db.query(SavingsGoal).filter(SavingsGoal.id == goal_id).first()
+    if not goal:
+        raise HTTPException(status_code=404, detail="Meta no encontrada")
+
+    checkins = db.query(SavingsCheckin).filter(
+        SavingsCheckin.goal_id == goal_id
+    ).order_by(
+        SavingsCheckin.record_date.desc(),
+        SavingsCheckin.created_at.desc(),
+    ).limit(limit).all()
+
+    return {
+        "goal_id": goal_id,
+        "checkins": [
+            {
+                "id": checkin.id,
+                "record_date": checkin.record_date.isoformat(),
+                "saved_amount": checkin.saved_amount,
+            }
+            for checkin in checkins
+        ],
+    }
 
 
 @router.post("/goals/{goal_id}/checkin")

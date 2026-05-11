@@ -272,7 +272,7 @@
                     <div class="form-grid">
                         <div>
                             <label>Ingreso mensual (COP)</label>
-                            <input type="number" id="monthlyIncome" min="0" step="1000" required />
+                            <input type="text" id="monthlyIncome" inputmode="numeric" placeholder="Ej: 4.520.000" required />
                         </div>
                     </div>
                     <div style="margin-top: 14px;">
@@ -331,7 +331,7 @@
                         </div>
                         <div>
                             <label>Gasto del dia (COP)</label>
-                            <input type="number" id="dailyExpenses" min="0" step="1000" required />
+                            <input type="text" id="dailyExpenses" inputmode="numeric" placeholder="Ej: 45.200" required />
                         </div>
                         <div>
                             <label>Tipo de gasto</label>
@@ -392,6 +392,11 @@
             }).format(value || 0);
 
         const badge = (label, color) => `<span class="badge ${color}">${label}</span>`;
+
+        const parseMoneyInput = (value) => {
+            const digits = String(value ?? "").replace(/[^0-9]/g, "");
+            return Number(digits) || 0;
+        };
 
         function setFormDisabled(formId, disabled) {
             const form = document.getElementById(formId);
@@ -528,7 +533,7 @@
 
             const payload = {
                 user_id: user.id,
-                monthly_income: Number(document.getElementById("monthlyIncome").value),
+                monthly_income: parseMoneyInput(document.getElementById("monthlyIncome").value),
             };
 
             try {
@@ -558,7 +563,7 @@
             const payload = {
                 user_id: user.id,
                 record_date: document.getElementById("dailyDate").value,
-                expenses: Number(document.getElementById("dailyExpenses").value),
+                expenses: parseMoneyInput(document.getElementById("dailyExpenses").value),
                 expense_type: document.getElementById("dailyExpenseType").value,
                 category: document.getElementById("dailyCategory").value,
                 note: document.getElementById("dailyNote").value,
@@ -594,7 +599,7 @@
         }
 
         function irAlSimulador() {
-            window.location.href = "/static/simulator.html";
+            window.location.href = "/static/simulator.html?v=2";
         }
 
         function irAMetas() {

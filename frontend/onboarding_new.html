@@ -277,11 +277,8 @@
 
             <!-- 14 -->
             <div class="question">
-                <p>14. Edad:</p>
-                <label><input type="radio" name="q14" value="18–25" required> 18–25</label>
-                <label><input type="radio" name="q14" value="26–35"> 26–35</label>
-                <label><input type="radio" name="q14" value="36–45"> 36–45</label>
-                <label><input type="radio" name="q14" value="46+"> 46+</label>
+                <p>14. Edad (en anos):</p>
+                <input type="number" name="q14" placeholder="Ej: 28" min="18" max="100" required>
             </div>
 
             <!-- 15 -->
@@ -334,7 +331,7 @@
                 q11: document.querySelector('input[name="q11"]:checked')?.value,
                 q12: document.querySelector('input[name="q12"]:checked')?.value,
                 q13: document.querySelector('input[name="q13"]')?.value,
-                q14: document.querySelector('input[name="q14"]:checked')?.value,
+                q14: document.querySelector('input[name="q14"]')?.value,
                 q15: document.querySelector('input[name="q15"]:checked')?.value,
                 q16: document.querySelector('input[name="q16"]')?.value
             };

@@ -252,11 +252,11 @@
         <h2>Paso 2: ¿Qué deseas simular?</h2>
         
         <div class="ruta-selector">
-          <div class="ruta-card" onclick="seleccionarRuta('A')">
+          <div class="ruta-card" onclick="seleccionarRuta(event, 'A')">
             <h3>📊 Ruta A</h3>
             <p>Sé exactamente cuánto dinero necesito</p>
           </div>
-          <div class="ruta-card" onclick="seleccionarRuta('B')">
+          <div class="ruta-card" onclick="seleccionarRuta(event, 'B')">
             <h3>💰 Ruta B</h3>
             <p>No sé el monto, pero sé cuánto puedo pagar</p>
           </div>
@@ -277,16 +277,7 @@
           <input type="number" id="plazo-a" placeholder="Ej: 48" min="12" step="1">
         </div>
 
-        <div class="form-grid hidden" id="requisitos-a">
-          <div>
-            <label>Edad</label>
-            <input type="number" id="edad-a" placeholder="Ej: 30" min="18" step="1">
-          </div>
-          <div>
-            <label>Ingreso mensual (COP)</label>
-            <input type="number" id="ingreso-a" placeholder="Ej: 3000000" min="0" step="10000">
-          </div>
-        </div>
+        <p class="note hidden" id="onboardingNoteA"></p>
 
         <div class="form-group hidden" id="seguro-a-group">
           <label>
@@ -312,16 +303,7 @@
           <input type="number" id="plazo-b" placeholder="Ej: 48" min="12" step="1">
         </div>
 
-        <div class="form-grid hidden" id="requisitos-b">
-          <div>
-            <label>Edad</label>
-            <input type="number" id="edad-b" placeholder="Ej: 30" min="18" step="1">
-          </div>
-          <div>
-            <label>Ingreso mensual (COP)</label>
-            <input type="number" id="ingreso-b" placeholder="Ej: 3000000" min="0" step="10000">
-          </div>
-        </div>
+        <p class="note hidden" id="onboardingNoteB"></p>
 
         <div class="form-group hidden" id="seguro-b-group">
           <label>
@@ -387,7 +369,7 @@
         </div>
 
         <div style="margin-top: 20px;">
-          <button onclick="verAmortizacion()" class="secondary">Ver Tabla de Amortización</button>
+          <button id="amortizacion-btn" onclick="verAmortizacion()" class="secondary">Ver Tabla de Amortización</button>
           <button onclick="volverAlInicio()" class="secondary">Nueva Simulación</button>
         </div>
 
@@ -402,16 +384,66 @@
   </div>
 
   <script>
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) {
+      window.location.href = "/static/index.html";
+    }
+
     // Estado global
     const estado = {
       tasa_mensual: null,
       banco_id: null,
+      banco: null,
+      producto_id: null,
+      producto: null,
       ruta: null,
       ultimo_resultado: null,
+      onboarding_age: null,
+      onboarding_income: null,
     };
 
     // Cargar bancos al iniciar
     cargarBancos();
+    cargarPerfilOnboarding();
+
+    function parseEdadEncuesta(valor) {
+      if (!valor) return null;
+      const rango = String(valor).match(/(\d+)\s*[–-]\s*(\d+)/);
+      if (rango) {
+        const min = parseInt(rango[1], 10);
+        const max = parseInt(rango[2], 10);
+        if (Number.isFinite(min) && Number.isFinite(max)) {
+          return Math.round((min + max) / 2);
+        }
+      }
+
+      if (String(valor).includes('+')) {
+        const base = parseInt(valor, 10);
+        return Number.isFinite(base) ? base + 4 : null;
+      }
+
+      const numero = parseInt(valor, 10);
+      return Number.isFinite(numero) ? numero : null;
+    }
+
+    async function cargarPerfilOnboarding() {
+      try {
+        const res = await fetch(`/users/profile/${user.id}`);
+        const data = await res.json();
+        if (!res.ok) {
+          return;
+        }
+
+        const profile = data.profile || {};
+        const edad = parseEdadEncuesta(profile.q14);
+        const ingreso = parseFloat(String(profile.q16 || "").replace(/[^0-9]/g, ""));
+
+        estado.onboarding_age = Number.isFinite(edad) ? edad : null;
+        estado.onboarding_income = Number.isFinite(ingreso) ? ingreso : null;
+      } catch (e) {
+        // No-op
+      }
+    }
 
     async function cargarBancos() {
       try {
@@ -422,33 +454,9 @@
         data.bancos.forEach(banco => {
           const option = document.createElement('option');
           option.value = banco.id;
-          option.textContent = `${banco.nombre} (${banco.tasa_ref}% MV)`;
+          option.textContent = banco.nombre;
           select.appendChild(option);
         });
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    async function cargarTiposCredito() {
-      try {
-        const res = await fetch('/simulator/tipos');
-        const data = await res.json();
-        
-        const selectA = document.getElementById('tipo-a');
-        const selectB = document.getElementById('tipo-b');
-        
-        for (const [id, tipo] of Object.entries(data.tipos)) {
-          const option1 = document.createElement('option');
-          option1.value = id;
-          option1.textContent = tipo.nombre;
-          selectA.appendChild(option1);
-          
-          const option2 = document.createElement('option');
-          option2.value = id;
-          option2.textContent = tipo.nombre;
-          selectB.appendChild(option2);
-        }
       } catch (e) {
         console.error(e);
       }
@@ -457,11 +465,28 @@
     async function cambiarBanco() {
       const bancoId = document.getElementById('banco-select').value;
       const infoDiv = document.getElementById('info-banco');
+      const productoGroup = document.getElementById('producto-group');
+      const productoSelect = document.getElementById('producto-select');
+      const productoInfo = document.getElementById('info-producto');
       const tasaManualGroup = document.getElementById('tasa-manual-group');
+
+      estado.banco_id = null;
+      estado.banco = null;
+      estado.producto_id = null;
+      estado.producto = null;
+      estado.tasa_mensual = null;
+
+      productoSelect.innerHTML = '<option value="">-- Selecciona un producto --</option>';
+      productoGroup.classList.add('hidden');
+      productoInfo.classList.add('hidden');
+      tasaManualGroup.classList.add('hidden');
+      document.getElementById('ruta-section').classList.add('hidden');
+      document.getElementById('ruta-a-section').classList.add('hidden');
+      document.getElementById('ruta-b-section').classList.add('hidden');
+      document.getElementById('vivienda-section').classList.add('hidden');
 
       if (bancoId === '') {
         infoDiv.classList.add('hidden');
-        tasaManualGroup.classList.add('hidden');
         return;
       }
 
@@ -472,39 +497,175 @@
         const html = `
           <div style="background: white; padding: 15px; border-radius: 5px;">
             <h4>${banco.nombre}</h4>
-            <p><strong>Tasa Referencial:</strong> ${banco.tasa_ref}% MV (${banco.tea_ref}% E.A.)</p>
-            <p><strong>Rango:</strong> ${banco.tasa_min}% - ${banco.tasa_max}%</p>
-            <p><strong>Nota:</strong> ${banco.nota}</p>
+            <p>${banco.descripcion}</p>
           </div>
         `;
         document.getElementById('banco-detalle').innerHTML = html;
         infoDiv.classList.remove('hidden');
-        
+
         estado.banco_id = bancoId;
-        estado.tasa_mensual = banco.tasa_ref;
-        
-        tasaManualGroup.classList.add('hidden');
+        estado.banco = banco;
+
+        banco.productos.forEach((producto) => {
+          const option = document.createElement('option');
+          option.value = producto.id;
+          option.textContent = producto.nombre;
+          productoSelect.appendChild(option);
+        });
+        productoGroup.classList.remove('hidden');
       } catch (e) {
         console.error(e);
       }
     }
 
-    function confirmarTasa() {
-      if (!estado.tasa_mensual) {
-        alert('Por favor selecciona un banco o ingresa una tasa');
+    function cambiarProducto() {
+      const productoId = parseInt(document.getElementById('producto-select').value, 10);
+      const productoInfo = document.getElementById('info-producto');
+      const tasaManualGroup = document.getElementById('tasa-manual-group');
+      const tasaManualInput = document.getElementById('tasa-manual');
+
+      estado.producto_id = null;
+      estado.producto = null;
+      estado.tasa_mensual = null;
+
+      if (!estado.banco || Number.isNaN(productoId)) {
+        productoInfo.classList.add('hidden');
+        tasaManualGroup.classList.add('hidden');
         return;
       }
 
+      const producto = estado.banco.productos.find((item) => item.id === productoId);
+      if (!producto) {
+        productoInfo.classList.add('hidden');
+        tasaManualGroup.classList.add('hidden');
+        return;
+      }
+
+      estado.producto_id = productoId;
+      estado.producto = producto;
+      estado.tasa_mensual = producto.tasa_mensual;
+
+      const rango = producto.categoria === 'consumo'
+        ? `Monto: ${formatMoney(producto.monto_min)} - ${formatMoney(producto.monto_max)} | Plazo: ${producto.plazo_min} - ${producto.plazo_max} meses`
+        : `Plazos: ${producto.plazos_anos.join(', ')} anos | Financiacion: ${(producto.financiacion * 100).toFixed(0)}%`;
+
+      const requisitos = [];
+      if (producto.edad_min) requisitos.push(`Edad minima ${producto.edad_min}`);
+      if (producto.edad_max) requisitos.push(`Edad maxima ${producto.edad_max}`);
+      if (producto.ingreso_min) requisitos.push(`Ingreso minimo ${formatMoney(producto.ingreso_min)}`);
+      if (producto.max_cuota_ratio) requisitos.push(`Cuota max ${Math.round(producto.max_cuota_ratio * 100)}% del ingreso`);
+
+      let tasaTexto = 'A definir por el banco';
+      if (producto.tasa_mensual && producto.tasa_mensual > 0) {
+        tasaTexto = `${producto.tasa_mensual}% MV (${producto.tea_ref}% E.A.)`;
+      }
+
+      let seguroTexto = 'No incluido en el calculo';
+      if (producto.seguro_tipo === 'fijo') {
+        seguroTexto = `${formatMoney(producto.seguro_valor)} mensual`;
+      } else if (producto.seguro_incluido) {
+        seguroTexto = 'Incluido (valor segun perfil)';
+      } else if (producto.seguro_opcional) {
+        seguroTexto = 'Opcional';
+      }
+
+      const html = `
+        <div style="background: white; padding: 15px; border-radius: 5px;">
+          <h4>${producto.nombre}</h4>
+          <p><strong>Tasa referencial:</strong> ${tasaTexto}</p>
+          <p><strong>Rango:</strong> ${rango}</p>
+          <p><strong>Seguro de vida:</strong> ${seguroTexto}</p>
+          ${requisitos.length ? `<p><strong>Requisitos:</strong> ${requisitos.join(' | ')}</p>` : ''}
+          ${producto.nota ? `<p><strong>Nota:</strong> ${producto.nota}</p>` : ''}
+        </div>
+      `;
+      document.getElementById('producto-detalle').innerHTML = html;
+      productoInfo.classList.remove('hidden');
+
+      if (producto.tasa_editable) {
+        tasaManualInput.value = producto.tasa_mensual > 0 ? producto.tasa_mensual : '';
+        tasaManualGroup.classList.remove('hidden');
+      } else {
+        tasaManualGroup.classList.add('hidden');
+      }
+    }
+
+    function confirmarProducto() {
+      if (!estado.producto) {
+        alert('Por favor selecciona un producto');
+        return;
+      }
+
+      const alerta = document.getElementById('alerta-tasa');
+      alerta.classList.add('hidden');
+      alerta.textContent = '';
+      alerta.classList.remove('error');
+
+      if (estado.producto.tasa_editable) {
+        const tasaManual = parseFloat(document.getElementById('tasa-manual').value);
+        if (!tasaManual || tasaManual <= 0) {
+          alerta.textContent = 'Ingresa una tasa mensual valida';
+          alerta.classList.remove('hidden');
+          alerta.classList.add('error');
+          return;
+        }
+        estado.tasa_mensual = tasaManual;
+      } else {
+        estado.tasa_mensual = estado.producto.tasa_mensual;
+      }
+
+      if (estado.producto.categoria === 'vivienda') {
+        document.getElementById('ruta-section').classList.add('hidden');
+        document.getElementById('ruta-a-section').classList.add('hidden');
+        document.getElementById('ruta-b-section').classList.add('hidden');
+        document.getElementById('vivienda-section').classList.remove('hidden');
+        document.getElementById('vivienda-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+
+      const requiereDatos = estado.producto.edad_min || estado.producto.edad_max || estado.producto.ingreso_min || estado.producto.max_cuota_ratio;
+      if (requiereDatos && (!estado.onboarding_age || !estado.onboarding_income)) {
+        alert('Completa la encuesta inicial para usar este producto');
+        return;
+      }
+
+      const noteA = document.getElementById('onboardingNoteA');
+      const noteB = document.getElementById('onboardingNoteB');
+      if (requiereDatos && noteA && noteB) {
+        const texto = `Usaremos los datos de tu encuesta: edad aprox ${estado.onboarding_age} anos, ingreso ${formatMoney(estado.onboarding_income)}.`;
+        noteA.textContent = texto;
+        noteB.textContent = texto;
+        noteA.classList.remove('hidden');
+        noteB.classList.remove('hidden');
+      } else if (noteA && noteB) {
+        noteA.classList.add('hidden');
+        noteB.classList.add('hidden');
+      }
+
+      const seguroOpcional = estado.producto.seguro_opcional;
+      document.getElementById('seguro-a-group').classList.toggle('hidden', !seguroOpcional);
+      document.getElementById('seguro-b-group').classList.toggle('hidden', !seguroOpcional);
+
+      const montoInput = document.getElementById('monto-a');
+      montoInput.min = estado.producto.monto_min || 0;
+      montoInput.max = estado.producto.monto_max || 1000000000;
+
+      const plazoA = document.getElementById('plazo-a');
+      const plazoB = document.getElementById('plazo-b');
+      plazoA.min = estado.producto.plazo_min || 1;
+      plazoA.max = estado.producto.plazo_max || 360;
+      plazoB.min = estado.producto.plazo_min || 1;
+      plazoB.max = estado.producto.plazo_max || 360;
+
       document.getElementById('ruta-section').classList.remove('hidden');
-      cargarTiposCredito();
       document.querySelector('html').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    function seleccionarRuta(ruta) {
+    function seleccionarRuta(evt, ruta) {
       estado.ruta = ruta;
       
       document.querySelectorAll('.ruta-card').forEach(card => card.classList.remove('active'));
-      event.target.closest('.ruta-card').classList.add('active');
+      evt.currentTarget.classList.add('active');
 
       document.getElementById('ruta-a-section').classList.add('hidden');
       document.getElementById('ruta-b-section').classList.add('hidden');
@@ -516,16 +677,19 @@
       }
 
       setTimeout(() => {
-        document.getElementById('ruta-a-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const targetId = ruta === 'A' ? 'ruta-a-section' : 'ruta-b-section';
+        document.getElementById(targetId).scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
     }
 
     async function simularRutaA() {
       const capital = parseFloat(document.getElementById('monto-a').value);
-      const tipo = parseInt(document.getElementById('tipo-a').value);
       const plazo = parseInt(document.getElementById('plazo-a').value);
+      const edad = estado.onboarding_age;
+      const ingreso = estado.onboarding_income;
+      const incluyeSeguro = document.getElementById('seguro-a')?.checked ?? true;
 
-      if (!capital || !tipo || !plazo) {
+      if (!capital || !plazo || !estado.producto_id) {
         alert('Por favor completa todos los campos');
         return;
       }
@@ -536,16 +700,18 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             capital,
-            tipo,
+            producto_id: estado.producto_id,
             plazo,
-            tasa_mensual: estado.tasa_mensual
+            tasa_mensual: estado.tasa_mensual,
+            edad: Number.isFinite(edad) ? edad : null,
+            ingreso_mensual: Number.isFinite(ingreso) ? ingreso : null,
+            incluye_seguro: incluyeSeguro
           })
         });
 
         const resultado = await res.json();
-
-        if (resultado.error) {
-          alert('Error: ' + resultado.error);
+        if (!res.ok) {
+          alert('Error: ' + (resultado.detail || resultado.error || 'No se pudo simular'));
           return;
         }
 
@@ -559,10 +725,12 @@
 
     async function simularRutaB() {
       const cuota = parseFloat(document.getElementById('cuota-b').value);
-      const tipo = parseInt(document.getElementById('tipo-b').value);
       const plazo = parseInt(document.getElementById('plazo-b').value);
+      const edad = estado.onboarding_age;
+      const ingreso = estado.onboarding_income;
+      const incluyeSeguro = document.getElementById('seguro-b')?.checked ?? true;
 
-      if (!cuota || !tipo || !plazo) {
+      if (!cuota || !plazo || !estado.producto_id) {
         alert('Por favor completa todos los campos');
         return;
       }
@@ -573,16 +741,63 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             cuota_mensual: cuota,
-            tipo,
+            producto_id: estado.producto_id,
             plazo,
-            tasa_mensual: estado.tasa_mensual
+            tasa_mensual: estado.tasa_mensual,
+            edad: Number.isFinite(edad) ? edad : null,
+            ingreso_mensual: Number.isFinite(ingreso) ? ingreso : null,
+            incluye_seguro: incluyeSeguro
           })
         });
 
         const resultado = await res.json();
+        if (!res.ok) {
+          alert('Error: ' + (resultado.detail || resultado.error || 'No se pudo simular'));
+          return;
+        }
 
-        if (resultado.error) {
-          alert('Error: ' + resultado.error);
+        estado.ultimo_resultado = resultado;
+        mostrarResultados(resultado);
+      } catch (e) {
+        console.error(e);
+        alert('Error en la simulación');
+      }
+    }
+
+    async function simularVivienda() {
+      if (!estado.producto_id) {
+        alert('Selecciona un producto de vivienda');
+        return;
+      }
+
+      const ingreso = parseFloat(document.getElementById('ingreso-v').value);
+      const edad = parseInt(document.getElementById('edad-v').value);
+      const plazo = parseInt(document.getElementById('plazo-v').value);
+      const solicitantes = parseInt(document.getElementById('solicitantes-v').value);
+      const modalidad = document.getElementById('modalidad-v').value;
+
+      if (!ingreso || !edad || !plazo) {
+        alert('Por favor completa todos los campos');
+        return;
+      }
+
+      try {
+        const res = await fetch('/simulator/simular/vivienda', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            producto_id: estado.producto_id,
+            ingreso_mensual: ingreso,
+            edad,
+            plazo_anos: plazo,
+            solicitantes,
+            modalidad
+          })
+        });
+
+        const resultado = await res.json();
+        if (!res.ok) {
+          alert('Error: ' + (resultado.detail || resultado.error || 'No se pudo simular'));
           return;
         }
 
@@ -604,38 +819,73 @@
 
     function mostrarResultados(resultado) {
       document.getElementById('resultados-section').classList.remove('hidden');
+      document.getElementById('tabla-section').classList.add('hidden');
+      const amortBtn = document.getElementById('amortizacion-btn');
       
-      const titulo = resultado.ruta === 'A' 
-        ? `Crédito de ${formatMoney(resultado.capital)}`
-        : `Crédito con cuota de ${formatMoney(resultado.cuota_mensual)}`;
+      const titulo = resultado.simulacion === 'vivienda'
+        ? `Simulación de vivienda - ${resultado.producto_nombre}`
+        : (resultado.ruta === 'A'
+            ? `Crédito de ${formatMoney(resultado.capital)}`
+            : `Crédito con cuota de ${formatMoney(resultado.cuota_mensual)}`);
       
       document.getElementById('resultado-titulo').textContent = titulo;
 
-      const items = [
-        { label: 'Capital', valor: resultado.capital },
-        { label: 'Plazo', valor: resultado.plazo + ' meses' },
-        { label: 'Tasa Mensual', valor: resultado.tasa_mensual + '% MV' },
-        { label: 'TEA', valor: resultado.tea.toFixed(2) + '%' },
-        { label: '💳 Cuota Mensual', valor: formatMoney(resultado.cuota_mensual) },
-        { label: 'Total a Pagar', valor: formatMoney(resultado.total_pago) },
-        { label: 'Total Intereses', valor: formatMoney(resultado.total_interes) },
-        { label: 'Seguro Estimado', valor: formatMoney(resultado.seguro_estimado) },
-        { label: 'CTC Estimado', valor: formatMoney(resultado.ctc) },
-      ];
+      let items = [];
+
+      if (resultado.simulacion === 'vivienda') {
+        if (amortBtn) {
+          amortBtn.classList.add('hidden');
+        }
+        items = [
+          { label: 'Banco', valor: resultado.banco, tipo: 'texto' },
+          { label: 'Producto', valor: resultado.producto_nombre, tipo: 'texto' },
+          { label: 'Modalidad', valor: resultado.modalidad, tipo: 'texto' },
+          { label: 'Plazo', valor: `${resultado.plazo_anios} anos`, tipo: 'texto' },
+          { label: 'Tasa Mensual', valor: `${resultado.tasa_mensual}% MV`, tipo: 'texto' },
+          { label: 'TEA', valor: `${resultado.tea}%`, tipo: 'texto' },
+          { label: 'Ingreso mensual', valor: resultado.ingreso_mensual, tipo: 'money' },
+          { label: 'Cuota maxima', valor: resultado.cuota_max, tipo: 'money' },
+          { label: 'Monto financiable', valor: resultado.capital, tipo: 'money' },
+          { label: 'Valor vivienda', valor: resultado.valor_vivienda, tipo: 'money' },
+          { label: 'Cuota inicial', valor: resultado.cuota_inicial, tipo: 'money' },
+        ];
+      } else {
+        if (amortBtn) {
+          amortBtn.classList.remove('hidden');
+        }
+        items = [
+          { label: 'Banco', valor: resultado.banco, tipo: 'texto' },
+          { label: 'Producto', valor: resultado.producto_nombre, tipo: 'texto' },
+          { label: 'Tipo de cuota', valor: resultado.cuota_tipo, tipo: 'texto' },
+          { label: 'Capital', valor: resultado.capital, tipo: 'money' },
+          { label: 'Plazo', valor: `${resultado.plazo} meses`, tipo: 'texto' },
+          { label: 'Tasa Mensual', valor: `${resultado.tasa_mensual}% MV`, tipo: 'texto' },
+          { label: 'TEA', valor: `${resultado.tea.toFixed(2)}%`, tipo: 'texto' },
+          { label: 'Cuota base', valor: resultado.cuota_base, tipo: 'money' },
+          { label: 'Seguro mensual', valor: resultado.seguro_mensual, tipo: 'money' },
+          { label: 'Cuota mensual', valor: resultado.cuota_mensual, tipo: 'money' },
+          { label: 'Total a pagar', valor: resultado.total_pago, tipo: 'money' },
+          { label: 'Total intereses', valor: resultado.total_interes, tipo: 'money' },
+          { label: 'Seguro estimado', valor: resultado.seguro_estimado, tipo: 'money' },
+          { label: 'CTC estimado', valor: resultado.ctc, tipo: 'money' },
+        ];
+      }
 
       let html = '';
       items.forEach(item => {
+        const valor = item.tipo === 'money'
+          ? formatMoney(item.valor)
+          : item.valor;
         html += `
           <div class="resultado-item">
             <label>${item.label}</label>
-            <div class="valor">${typeof item.valor === 'string' ? item.valor : formatMoney(item.valor)}</div>
+            <div class="valor">${valor}</div>
           </div>
         `;
       });
 
       document.getElementById('resultado-grid').innerHTML = html;
 
-      // Mostrar alerta de usura si aplica
       const alertaDiv = document.getElementById('alerta-usura');
       if (resultado.alerta_usura) {
         alertaDiv.classList.remove('hidden');
@@ -649,7 +899,9 @@
     }
 
     async function verAmortizacion() {
-      if (!estado.ultimo_resultado) return;
+      if (!estado.ultimo_resultado || estado.ultimo_resultado.simulacion === 'vivienda') {
+        return;
+      }
 
       const res = await fetch('/simulator/amortizacion', {
         method: 'POST',
@@ -658,11 +910,18 @@
           capital: estado.ultimo_resultado.capital,
           tasa_mensual: estado.ultimo_resultado.tasa_mensual,
           plazo: estado.ultimo_resultado.plazo,
-          cuota_mensual: estado.ultimo_resultado.cuota_mensual
+          cuota_base: estado.ultimo_resultado.cuota_base,
+          producto_id: estado.ultimo_resultado.producto_id,
+          incluye_seguro: estado.ultimo_resultado.incluye_seguro
         })
       });
 
       const data = await res.json();
+
+      if (!res.ok) {
+        alert('No se pudo cargar la amortizacion');
+        return;
+      }
       
       let html = `
         <thead>
@@ -707,8 +966,13 @@
       document.getElementById('ruta-section').classList.add('hidden');
       document.getElementById('ruta-a-section').classList.add('hidden');
       document.getElementById('ruta-b-section').classList.add('hidden');
+      document.getElementById('vivienda-section').classList.add('hidden');
       document.getElementById('resultados-section').classList.add('hidden');
       document.getElementById('tabla-section').classList.add('hidden');
+      const amortBtn = document.getElementById('amortizacion-btn');
+      if (amortBtn) {
+        amortBtn.classList.remove('hidden');
+      }
       document.querySelectorAll('.ruta-card').forEach(card => card.classList.remove('active'));
 
       document.querySelector('html').scrollIntoView({ behavior: 'smooth' });

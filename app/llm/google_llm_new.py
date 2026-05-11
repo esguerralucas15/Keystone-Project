@@ -73,6 +73,46 @@ def construir_input_usuario(data, user_data=None):
     """
 
 
+def construir_contexto_finanzas(finance_data, goals_data=None):
+    if not finance_data:
+        return ""
+
+    monthly_income = finance_data.get("monthly_income", 0)
+    monthly_fixed = finance_data.get("monthly_fixed", 0)
+    monthly_variable = finance_data.get("monthly_variable", 0)
+    monthly_expenses = finance_data.get("monthly_expenses", 0)
+    savings_capacity = finance_data.get("savings_capacity", 0)
+    days_with_records = finance_data.get("days_with_records", 0)
+    last_record_date = finance_data.get("last_record_date") or "N/A"
+    score = finance_data.get("score")
+    score_color = finance_data.get("score_color")
+    has_records = finance_data.get("has_records")
+
+    goals_lines = ""
+    if goals_data:
+        lines = []
+        for goal in goals_data[:3]:
+            lines.append(
+                f"- {goal.get('title')}: {goal.get('progress', 0):.1f}%"
+                f" (ahorrado {goal.get('total_saved')}, faltante {goal.get('remaining')})"
+            )
+        goals_lines = "\nMetas de ahorro activas:\n" + "\n".join(lines)
+
+    return (
+        "Contexto financiero reciente (ultimos 30 dias):\n"
+        f"Ingreso mensual actual: {monthly_income}\n"
+        f"Gastos fijos: {monthly_fixed}\n"
+        f"Gastos variables: {monthly_variable}\n"
+        f"Gastos totales: {monthly_expenses}\n"
+        f"Capacidad de ahorro: {savings_capacity}\n"
+        f"Dias con registros: {days_with_records}\n"
+        f"Ultimo registro: {last_record_date}\n"
+        f"Score actual: {score} ({score_color})\n"
+        f"Tiene registros: {has_records}"
+        f"{goals_lines}"
+    )
+
+
 def construir_contexto_encuesta(profile_data, user_data=None):
     """Construir contexto con respuestas de la encuesta financiera."""
     etiquetas = [
@@ -113,6 +153,26 @@ def _perfil_tiene_finanzas(profile_data):
         return False
     claves = {"ingresos", "gastos_fijos", "gastos_variables", "deudas"}
     return any(clave in profile_data for clave in claves)
+
+
+def _tiene_finanzas(profile_data, finance_data):
+    if _perfil_tiene_finanzas(profile_data):
+        return True
+    if not finance_data:
+        return False
+    claves = {"monthly_income", "monthly_fixed", "monthly_variable", "monthly_expenses"}
+    return any(clave in finance_data for clave in claves)
+
+
+def _map_finance_to_fallback(finance_data):
+    if not finance_data:
+        return None
+    return {
+        "ingresos": finance_data.get("monthly_income", 0),
+        "gastos_fijos": finance_data.get("monthly_fixed", 0),
+        "gastos_variables": finance_data.get("monthly_variable", 0),
+        "deudas": 0,
+    }
 
 
 def limpiar_formato_texto(texto):
@@ -226,7 +286,14 @@ def analizar_usuario(data):
     }
 
 
-def generar_respuesta_ia(mensaje, perfil_data=None, historial_conversacion=None, user_data=None):
+def generar_respuesta_ia(
+    mensaje,
+    perfil_data=None,
+    historial_conversacion=None,
+    user_data=None,
+    finance_data=None,
+    goals_data=None,
+):
     """
     Generar respuesta del LLM usando Google Gemini.
     
@@ -261,6 +328,10 @@ def generar_respuesta_ia(mensaje, perfil_data=None, historial_conversacion=None,
         contexto_usuario = construir_input_usuario(perfil_data, user_data)
         if contexto_usuario:
             history.append(SystemMessage(content=contexto_usuario))
+
+        contexto_finanzas = construir_contexto_finanzas(finance_data, goals_data)
+        if contexto_finanzas:
+            history.append(SystemMessage(content=contexto_finanzas))
 
         contexto_kb = obtener_contexto_knowledge_base(mensaje)
         if contexto_kb:
@@ -391,7 +462,15 @@ def generar_recomendacion_inicial(profile_data, user_data=None):
     )
 
 
-def procesar_mensaje_chatbot(user_id, mensaje, user_data=None, profile_data=None, historial_conversacion=None):
+def procesar_mensaje_chatbot(
+    user_id,
+    mensaje,
+    user_data=None,
+    profile_data=None,
+    historial_conversacion=None,
+    finance_data=None,
+    goals_data=None,
+):
     """
     Función principal para procesar mensajes del chatbot.
     
@@ -420,11 +499,16 @@ def procesar_mensaje_chatbot(user_id, mensaje, user_data=None, profile_data=None
             profile_data,
             historial_conversacion,
             user_data=user_data,
+            finance_data=finance_data,
+            goals_data=goals_data,
         )
 
         if not reply:
-            if _perfil_tiene_finanzas(profile_data):
-                reply = generar_respuesta_fallback(mensaje, profile_data)
+            if _tiene_finanzas(profile_data, finance_data):
+                fallback_data = profile_data
+                if not _perfil_tiene_finanzas(profile_data):
+                    fallback_data = _map_finance_to_fallback(finance_data)
+                reply = generar_respuesta_fallback(mensaje, fallback_data)
             else:
                 reply = generar_respuesta_fallback_general()
 
