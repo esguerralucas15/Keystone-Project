@@ -5,35 +5,133 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - EquiFinance</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&family=DM+Mono:wght@400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700&family=Sora:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 
         :root {
-            --bg: #0b0f14;
-            --panel: #121a26;
-            --panel-2: #0f1724;
-            --border: #243043;
-            --text: #e6edf3;
-            --muted: #8fa1b3;
-            --accent: #2dd4bf;
-            --accent-2: #38bdf8;
+            --bg: #f7f9fc;
+            --panel: rgba(255, 255, 255, 0.88);
+            --panel-2: #f3f6fb;
+            --border: rgba(16, 24, 40, 0.12);
+            --text: #0f172a;
+            --muted: #5a6b82;
+            --accent: #0ea5e9;
+            --accent-2: #14b8a6;
             --danger: #ef4444;
             --warn: #f59e0b;
             --good: #22c55e;
+            --shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: 'Manrope', sans-serif;
             color: var(--text);
-            background: radial-gradient(circle at top, #1b263a, #0b0f14 65%);
+            background:
+                radial-gradient(800px 420px at 8% 0%, rgba(14, 165, 233, 0.18), transparent 60%),
+                radial-gradient(700px 420px at 92% 10%, rgba(20, 184, 166, 0.18), transparent 60%),
+                linear-gradient(180deg, #f7f9fc, #e9eef6);
             min-height: 100vh;
             padding: 28px 20px 40px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
+            background-size: 90px 90px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            width: 420px;
+            height: 420px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.18), transparent 65%);
+            right: -160px;
+            bottom: -160px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .topbar {
+            max-width: 1200px;
+            margin: 0 auto 24px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+            position: relative;
+            z-index: 1;
+        }
+
+        .topbar-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Sora', sans-serif;
+            font-weight: 700;
+        }
+
+        .topbar-mark {
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #04111b;
+            font-size: 13px;
+        }
+
+        .topbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 13px;
+        }
+
+        .topbar-nav a {
+            text-decoration: none;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .topbar-nav a:hover {
+            color: var(--text);
+        }
+
+        .topbar-cta {
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 13px;
+            color: #04111b;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            box-shadow: 0 12px 22px rgba(14, 165, 233, 0.2);
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
 
         .header {
@@ -44,7 +142,13 @@
             margin-bottom: 18px;
         }
 
-        h1 { font-size: 28px; font-weight: 600; }
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            font-family: 'Sora', sans-serif;
+            letter-spacing: -0.02em;
+        }
+
         .subtle { color: var(--muted); font-size: 14px; }
 
         .actions {
@@ -56,21 +160,36 @@
         button {
             padding: 10px 18px;
             border: none;
-            border-radius: 10px;
-            background: var(--accent-2);
-            color: #03101c;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #04111b;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 700;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 12px 22px rgba(14, 165, 233, 0.2);
         }
 
         button:hover {
             transform: translateY(-1px);
-            box-shadow: 0 10px 20px rgba(56, 189, 248, 0.3);
+            box-shadow: 0 18px 30px rgba(14, 165, 233, 0.22);
         }
 
-        button.secondary { background: #1f2a3a; color: var(--text); }
-        button.danger { background: #ef4444; color: #fff; }
+        button.secondary {
+            background: rgba(15, 23, 42, 0.06);
+            color: var(--text);
+            border: 1px solid var(--border);
+            box-shadow: none;
+        }
+
+        button.secondary:hover {
+            box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
+        }
+
+        button.danger {
+            background: #ef4444;
+            color: #fff;
+            box-shadow: 0 12px 22px rgba(239, 68, 68, 0.2);
+        }
 
         .grid {
             display: grid;
@@ -81,14 +200,17 @@
         .card {
             background: var(--panel);
             border: 1px solid var(--border);
-            border-radius: 14px;
+            border-radius: 16px;
             padding: 18px;
-            box-shadow: 0 20px 60px rgba(6, 12, 24, 0.45);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+            animation: floatIn 0.5s ease;
         }
 
         .card h2 {
             font-size: 18px;
             margin-bottom: 12px;
+            font-family: 'Sora', sans-serif;
         }
 
         .form-grid {
@@ -97,24 +219,32 @@
             gap: 12px;
         }
 
-        label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px; }
+        label {
+            font-size: 11px;
+            color: var(--muted);
+            display: block;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
 
         input,
         select {
             width: 100%;
             padding: 10px 12px;
-            border-radius: 10px;
+            border-radius: 12px;
             border: 1px solid var(--border);
-            background: var(--panel-2);
+            background: #fff;
             color: var(--text);
-            font-family: 'DM Mono', monospace;
+            font-family: 'Manrope', sans-serif;
+            font-variant-numeric: tabular-nums;
         }
 
         input:focus,
         select:focus {
             outline: none;
-            border-color: var(--accent-2);
-            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.18);
         }
 
         .score-card {
@@ -133,7 +263,7 @@
 
         .score-value {
             font-size: 36px;
-            font-weight: 600;
+            font-weight: 700;
             min-width: 64px;
             text-align: center;
         }
@@ -142,7 +272,7 @@
             flex: 1;
             height: 10px;
             border-radius: 999px;
-            background: #1b2636;
+            background: #e5edf5;
             overflow: hidden;
         }
 
@@ -150,7 +280,7 @@
             display: block;
             height: 100%;
             width: 0;
-            background: var(--accent);
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
         }
 
         .badge {
@@ -160,13 +290,13 @@
             padding: 4px 10px;
             border-radius: 999px;
             font-size: 12px;
-            font-weight: 600;
-            color: #0b0f14;
+            font-weight: 700;
+            color: #0f172a;
         }
 
-        .badge.green { background: var(--good); }
-        .badge.yellow { background: var(--warn); }
-        .badge.red { background: var(--danger); }
+        .badge.green { background: rgba(34, 197, 94, 0.2); }
+        .badge.yellow { background: rgba(245, 158, 11, 0.2); }
+        .badge.red { background: rgba(239, 68, 68, 0.2); }
 
         .summary-grid {
             width: 100%;
@@ -178,7 +308,7 @@
         .summary-item {
             background: var(--panel-2);
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 10px;
         }
 
@@ -195,7 +325,7 @@
             width: 100%;
             height: 10px;
             border-radius: 999px;
-            background: #1b2636;
+            background: #e5edf5;
             overflow: hidden;
         }
 
@@ -203,7 +333,7 @@
             display: block;
             height: 100%;
             width: 0;
-            background: var(--accent);
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
         }
 
         .table {
@@ -222,9 +352,9 @@
         .table th { color: var(--muted); font-weight: 600; }
 
         .note {
-            background: rgba(56, 189, 248, 0.1);
-            border: 1px solid rgba(56, 189, 248, 0.35);
-            border-radius: 10px;
+            background: rgba(14, 165, 233, 0.1);
+            border: 1px solid rgba(14, 165, 233, 0.25);
+            border-radius: 12px;
             padding: 10px 12px;
             color: var(--muted);
             font-size: 13px;
@@ -233,12 +363,31 @@
 
         .hidden { display: none; }
 
+        @keyframes floatIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         @media (max-width: 720px) {
             .form-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
+    <header class="topbar">
+        <div class="topbar-brand">
+            <div class="topbar-mark">EF</div>
+            <div>EquiFinance</div>
+        </div>
+        <nav class="topbar-nav">
+            <a href="/static/dashboard.html">Dashboard</a>
+            <a href="/static/savings.html">Metas</a>
+            <a href="/static/simulator.html">Simulador</a>
+            <a href="/static/chatbot.html">Asesor</a>
+        </nav>
+        <a class="topbar-cta" href="/static/chatbot.html">Hablar con asesor</a>
+    </header>
+
     <div class="container">
         <div class="header">
             <div>

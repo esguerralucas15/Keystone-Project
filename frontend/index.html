@@ -5,151 +5,459 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - EquiFinance</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700&family=Sora:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+        :root {
+            --bg-0: #f7f9fc;
+            --bg-1: #e9eef6;
+            --panel: rgba(255, 255, 255, 0.88);
+            --panel-2: #f3f6fb;
+            --border: rgba(16, 24, 40, 0.12);
+            --text: #0f172a;
+            --muted: #5a6b82;
+            --accent: #0ea5e9;
+            --accent-2: #14b8a6;
+            --accent-3: #f59e0b;
+            --danger: #ef4444;
+            --good: #22c55e;
+            --shadow: 0 24px 60px rgba(15, 23, 42, 0.15);
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Manrope', sans-serif;
+            background:
+                radial-gradient(800px 420px at 10% 0%, rgba(14, 165, 233, 0.18), transparent 60%),
+                radial-gradient(700px 420px at 90% 10%, rgba(20, 184, 166, 0.18), transparent 60%),
+                linear-gradient(180deg, var(--bg-0), var(--bg-1));
             min-height: 100vh;
+            padding: 32px 20px;
+            color: var(--text);
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(15, 23, 42, 0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(15, 23, 42, 0.06) 1px, transparent 1px);
+            background-size: 90px 90px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            width: 420px;
+            height: 420px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.2), transparent 65%);
+            right: -140px;
+            top: -120px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .topbar {
+            max-width: 1100px;
+            margin: 0 auto 26px;
+            padding: 14px 18px;
             display: flex;
-            justify-content: center;
             align-items: center;
-            padding: 20px;
+            justify-content: space-between;
+            gap: 16px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+            position: relative;
+            z-index: 1;
         }
-        .container {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            padding: 40px;
-            width: 100%;
-            max-width: 400px;
+
+        .topbar-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Sora', sans-serif;
+            font-weight: 700;
         }
-        .logo {
-            text-align: center;
-            margin-bottom: 30px;
+
+        .topbar-mark {
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #04111b;
+            font-size: 13px;
         }
-        .logo h1 {
-            color: #667eea;
-            font-size: 28px;
-            margin-bottom: 5px;
+
+        .topbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 13px;
         }
-        .logo p {
-            color: #999;
+
+        .topbar-nav a {
+            text-decoration: none;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .topbar-nav a:hover {
+            color: var(--text);
+        }
+
+        .topbar-cta {
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 13px;
+            color: #04111b;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            box-shadow: 0 12px 22px rgba(14, 165, 233, 0.2);
+        }
+
+        .layout {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+            gap: 32px;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-family: 'Sora', sans-serif;
+            letter-spacing: -0.01em;
+        }
+
+        .brand-mark {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            color: #04111b;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
             font-size: 14px;
+            font-weight: 700;
         }
-        .form-group {
-            margin-bottom: 20px;
+
+        .hero h1 {
+            font-family: 'Sora', sans-serif;
+            font-size: 40px;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            margin-top: 8px;
         }
-        label {
-            display: block;
-            color: #333;
-            font-weight: bold;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: all 0.3s;
-            font-family: Arial, sans-serif;
-        }
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 8px rgba(102, 126, 234, 0.2);
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 6px;
+
+        .hero p {
+            color: var(--muted);
             font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
+            max-width: 440px;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 4px;
+        }
+
+        .hero-actions a {
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .hero-actions .primary-link {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #04111b;
+            box-shadow: 0 12px 22px rgba(14, 165, 233, 0.2);
+        }
+
+        .hero-actions .ghost-link {
+            border: 1px solid var(--border);
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
             margin-top: 10px;
         }
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+
+        .hero-card {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
         }
+
+        .hero-card span {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+        }
+
+        .hero-card strong {
+            font-size: 18px;
+        }
+
+        .container {
+            background: var(--panel);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            padding: 36px 32px 30px;
+            width: 100%;
+            max-width: 420px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(14px);
+            position: relative;
+            z-index: 1;
+            animation: floatIn 0.6s ease;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 26px;
+        }
+
+        .logo h1 {
+            font-family: 'Sora', sans-serif;
+            color: var(--text);
+            font-size: 24px;
+            margin-bottom: 6px;
+            letter-spacing: -0.02em;
+        }
+
+        .logo p {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 11px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            font-family: 'Manrope', sans-serif;
+            background: var(--panel-2);
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.18);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #05131f;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 10px;
+            box-shadow: 0 12px 25px rgba(14, 165, 233, 0.25);
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 18px 30px rgba(14, 165, 233, 0.25);
+        }
+
         button:active {
             transform: translateY(0);
         }
+
         .link-group {
             text-align: center;
             margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
+            padding-top: 18px;
+            border-top: 1px solid var(--border);
         }
+
         .link-group p {
-            color: #666;
+            color: var(--muted);
             font-size: 14px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
+
         .link-group a {
             display: inline-block;
-            color: #667eea;
+            color: var(--accent);
             text-decoration: none;
-            font-weight: bold;
-            padding: 10px 0;
-            transition: color 0.3s;
+            font-weight: 700;
+            padding: 6px 0;
+            transition: color 0.2s ease;
         }
+
         .link-group a:hover {
-            color: #764ba2;
+            color: #0284c7;
             text-decoration: underline;
         }
+
         #loginResponse {
             margin-top: 15px;
             padding: 12px;
-            border-radius: 6px;
+            border-radius: 10px;
             text-align: center;
             display: none;
             font-size: 14px;
         }
+
         #loginResponse.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background: rgba(239, 68, 68, 0.12);
+            color: #b91c1c;
+            border: 1px solid rgba(239, 68, 68, 0.3);
             display: block;
         }
+
         #loginResponse.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background: rgba(34, 197, 94, 0.12);
+            color: #15803d;
+            border: 1px solid rgba(34, 197, 94, 0.3);
             display: block;
+        }
+
+        @keyframes floatIn {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 900px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 24px 26px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo">
-            <h1>💰 EquiFinance</h1>
-            <p>Tu asesor financiero digital</p>
+    <header class="topbar">
+        <div class="topbar-brand">
+            <div class="topbar-mark">EF</div>
+            <div>EquiFinance</div>
         </div>
+        <nav class="topbar-nav">
+            <a href="/static/index.html">Inicio</a>
+            <a href="/static/register.html">Registro</a>
+        </nav>
+        <a class="topbar-cta" href="/static/register.html">Crear cuenta</a>
+    </header>
 
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="loginEmail">Correo electrónico</label>
-                <input type="email" id="loginEmail" placeholder="tu@email.com" required>
+    <div class="layout">
+        <section class="hero">
+            <div class="brand">
+                <div class="brand-mark">EF</div>
+                <div>EquiFinance</div>
             </div>
-            <div class="form-group">
-                <label for="loginPassword">Contraseña</label>
-                <input type="password" id="loginPassword" placeholder="••••••••" required>
+            <h1>Domina tu futuro financiero</h1>
+            <p>Asesoria personalizada, metas claras y seguimiento diario para tomar mejores decisiones financieras.</p>
+            <div class="hero-actions">
+                <a class="primary-link" href="/static/register.html">Comenzar ahora</a>
+                <a class="ghost-link" href="/static/register.html">Crear cuenta</a>
             </div>
-            <button type="submit">Iniciar sesión</button>
-        </form>
+            <div class="hero-grid">
+                <div class="hero-card">
+                    <span>Usuarios activos</span>
+                    <strong>12.4k+</strong>
+                </div>
+                <div class="hero-card">
+                    <span>Planes guiados</span>
+                    <strong>98%</strong>
+                </div>
+                <div class="hero-card">
+                    <span>Score en vivo</span>
+                    <strong>24/7</strong>
+                </div>
+            </div>
+        </section>
 
-        <div id="loginResponse"></div>
+        <section class="container">
+            <div class="logo">
+                <h1>Iniciar sesion</h1>
+                <p>Accede a tu tablero financiero personalizado.</p>
+            </div>
 
-        <div class="link-group">
-            <p>¿No tienes cuenta?</p>
-            <a href="/static/register.html">Crear una cuenta →</a>
-        </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Correo electrónico</label>
+                    <input type="email" id="loginEmail" placeholder="tu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Contraseña</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" required>
+                </div>
+                <button type="submit">Iniciar sesión</button>
+            </form>
+
+            <div id="loginResponse"></div>
+
+            <div class="link-group">
+                <p>¿No tienes cuenta?</p>
+                <a href="/static/register.html">Crear una cuenta →</a>
+            </div>
+        </section>
     </div>
 
     <script>

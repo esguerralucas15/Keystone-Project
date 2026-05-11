@@ -5,35 +5,120 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Chatbot - EquiFinance</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&family=DM+Mono:wght@400&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700&family=Sora:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 
     :root {
-      --bg: #0b0f14;
-      --panel: #111823;
-      --panel-2: #0d141f;
-      --border: #1f2a3a;
-      --text: #e6edf3;
-      --muted: #9aa7b2;
-      --accent: #38bdf8;
-      --accent-2: #0ea5e9;
-      --user: #1e293b;
-      --assistant: #0f172a;
-      --system: #0b1220;
+      --bg: #f7f9fc;
+      --panel: rgba(255, 255, 255, 0.88);
+      --panel-2: #f3f6fb;
+      --border: rgba(16, 24, 40, 0.12);
+      --text: #0f172a;
+      --muted: #5a6b82;
+      --accent: #0ea5e9;
+      --accent-2: #14b8a6;
+      --user: #e0f2fe;
+      --assistant: #ffffff;
+      --system: #f1f5fb;
+      --shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
-      background: radial-gradient(circle at top, #182235, #0b0f14 70%);
+      font-family: 'Manrope', sans-serif;
+      background:
+        radial-gradient(800px 420px at 8% 0%, rgba(14, 165, 233, 0.18), transparent 60%),
+        radial-gradient(700px 420px at 92% 10%, rgba(20, 184, 166, 0.18), transparent 60%),
+        linear-gradient(180deg, #f7f9fc, #e9eef6);
       color: var(--text);
       min-height: 100vh;
       padding: 28px 20px 40px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
+      background-size: 90px 90px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .topbar {
+      max-width: 1100px;
+      margin: 0 auto 24px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      position: relative;
+      z-index: 1;
+    }
+
+    .topbar-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+    }
+
+    .topbar-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #04111b;
+      font-size: 13px;
+    }
+
+    .topbar-nav {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 13px;
+    }
+
+    .topbar-nav a {
+      text-decoration: none;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .topbar-nav a:hover {
+      color: var(--text);
+    }
+
+    .topbar-cta {
+      text-decoration: none;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 13px;
+      color: #04111b;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 12px 22px rgba(14, 165, 233, 0.2);
     }
 
     .app {
       max-width: 1100px;
       margin: 0 auto;
+      position: relative;
+      z-index: 1;
     }
 
     .layout {
@@ -45,12 +130,14 @@
     .sidebar {
       background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 16px;
       padding: 14px;
       height: 560px;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 20px 60px rgba(6, 12, 24, 0.45);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      animation: floatIn 0.5s ease;
     }
 
     .sidebar-header {
@@ -63,8 +150,9 @@
 
     .sidebar-title {
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text);
+      font-family: 'Sora', sans-serif;
     }
 
     .chat-list {
@@ -79,22 +167,23 @@
     .chat-item {
       background: var(--panel-2);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 10px;
       cursor: pointer;
       font-size: 13px;
       color: var(--text);
-      transition: border-color 0.2s ease, transform 0.2s ease;
+      transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     }
 
     .chat-item:hover {
-      border-color: var(--accent-2);
+      border-color: rgba(14, 165, 233, 0.5);
       transform: translateY(-1px);
+      box-shadow: 0 12px 20px rgba(15, 23, 42, 0.08);
     }
 
     .chat-item.active {
       border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.3);
+      box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.2);
     }
 
     .chat-item .meta {
@@ -116,40 +205,47 @@
       margin-bottom: 18px;
     }
 
-    h2 { font-size: 26px; font-weight: 600; }
+    h2 {
+      font-size: 26px;
+      font-weight: 700;
+      font-family: 'Sora', sans-serif;
+      letter-spacing: -0.02em;
+    }
 
     .back-btn {
-      background: var(--accent);
-      color: #03101c;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #04111b;
       padding: 8px 16px;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 700;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
-      box-shadow: 0 10px 20px rgba(15, 118, 221, 0.25);
+      box-shadow: 0 12px 22px rgba(14, 165, 233, 0.2);
     }
 
     .back-btn:hover {
       transform: translateY(-1px);
-      box-shadow: 0 12px 24px rgba(15, 118, 221, 0.35);
+      box-shadow: 0 18px 28px rgba(14, 165, 233, 0.25);
     }
 
     #chat {
       background: var(--panel);
       border: 1px solid var(--border);
       padding: 16px;
-      border-radius: 14px;
+      border-radius: 16px;
       display: flex;
       flex-direction: column;
       height: 560px;
-      box-shadow: 0 20px 60px rgba(6, 12, 24, 0.45);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      animation: floatIn 0.5s ease;
     }
 
     .user-info {
       background: var(--panel-2);
       padding: 12px 14px;
-      border-radius: 10px;
+      border-radius: 12px;
       margin-bottom: 12px;
       font-size: 14px;
       border: 1px solid var(--border);
@@ -174,11 +270,28 @@
       word-wrap: break-word;
       line-height: 1.5;
       border: 1px solid transparent;
+      animation: messageIn 0.2s ease;
     }
 
-    .user { background: var(--user); align-self: flex-end; border-color: #22324c; }
-    .bot { background: var(--assistant); align-self: flex-start; border-color: #1c2b46; }
-    .system { background: var(--system); align-self: center; border-color: #22324c; color: var(--muted); font-size: 13px; }
+    .user {
+      background: var(--user);
+      align-self: flex-end;
+      border-color: rgba(14, 165, 233, 0.2);
+    }
+
+    .bot {
+      background: var(--assistant);
+      align-self: flex-start;
+      border-color: rgba(15, 23, 42, 0.08);
+    }
+
+    .system {
+      background: var(--system);
+      align-self: center;
+      border-color: rgba(15, 23, 42, 0.08);
+      color: var(--muted);
+      font-size: 13px;
+    }
 
     #controls {
       display: flex;
@@ -192,28 +305,45 @@
       height: 70px;
       padding: 10px 12px;
       border: 1px solid var(--border);
-      border-radius: 10px;
-      background: var(--system);
+      border-radius: 12px;
+      background: #fff;
       color: var(--text);
-      font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+      font-family: 'Manrope', sans-serif;
       resize: none;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.18);
     }
 
     button {
       padding: 10px 16px;
       border: none;
-      border-radius: 10px;
-      background: var(--accent-2);
-      color: #03101c;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #04111b;
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 700;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 12px 22px rgba(14, 165, 233, 0.2);
     }
 
-    button:hover { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(14, 165, 233, 0.35); }
-    button:disabled { background: #243142; cursor: not-allowed; box-shadow: none; }
-    button.secondary { background: #1f2937; color: var(--text); }
-    button.secondary:hover { box-shadow: 0 8px 18px rgba(15, 23, 42, 0.45); }
+    button:hover { transform: translateY(-1px); box-shadow: 0 18px 28px rgba(14, 165, 233, 0.22); }
+    button:disabled { background: #cbd5e1; color: #64748b; cursor: not-allowed; box-shadow: none; }
+    button.secondary { background: rgba(15, 23, 42, 0.06); color: var(--text); border: 1px solid var(--border); box-shadow: none; }
+    button.secondary:hover { box-shadow: 0 12px 20px rgba(15, 23, 42, 0.08); }
+
+    @keyframes floatIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes messageIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     @media (max-width: 900px) {
       .layout {
@@ -233,6 +363,20 @@
   </style>
 </head>
 <body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-mark">EF</div>
+      <div>EquiFinance</div>
+    </div>
+    <nav class="topbar-nav">
+      <a href="/static/dashboard.html">Dashboard</a>
+      <a href="/static/savings.html">Metas</a>
+      <a href="/static/simulator.html">Simulador</a>
+      <a href="/static/chatbot.html">Asesor</a>
+    </nav>
+    <a class="topbar-cta" href="/static/savings.html">Ver metas</a>
+  </header>
+
   <div class="app">
     <div class="header">
       <h2>Asesor Financiero EquiFinance</h2>

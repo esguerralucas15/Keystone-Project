@@ -5,53 +5,124 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Metas de Ahorro - EquiFinance</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;500;700&family=DM+Mono:wght@400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700&family=Sora:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 
         :root {
-            --bg: #0b0f14;
-            --panel: #121a26;
-            --panel-2: #0f1724;
-            --border: #223044;
-            --text: #e6edf3;
-            --muted: #91a4b7;
-            --accent: #22d3ee;
-            --accent-2: #34d399;
+            --bg: #f7f9fc;
+            --panel: rgba(255, 255, 255, 0.9);
+            --panel-2: #f3f6fb;
+            --border: rgba(16, 24, 40, 0.12);
+            --text: #0f172a;
+            --muted: #5a6b82;
+            --accent: #0ea5e9;
+            --accent-2: #14b8a6;
             --warn: #f59e0b;
+            --shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Sora', sans-serif;
+            font-family: 'Manrope', sans-serif;
             color: var(--text);
-            background: radial-gradient(circle at 10% 10%, #1b2a3e, #0b0f14 60%);
+            background:
+                radial-gradient(800px 420px at 10% 0%, rgba(14, 165, 233, 0.18), transparent 60%),
+                radial-gradient(700px 420px at 90% 10%, rgba(20, 184, 166, 0.18), transparent 60%),
+                linear-gradient(180deg, #f7f9fc, #e9eef6);
             min-height: 100vh;
             padding: 28px 20px 40px;
             position: relative;
             overflow-x: hidden;
         }
 
-        body::before,
-        body::after {
+        body::before {
             content: "";
             position: fixed;
-            width: 360px;
-            height: 360px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(34, 211, 238, 0.25), transparent 70%);
-            filter: blur(10px);
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
+            background-size: 90px 90px;
+            pointer-events: none;
             z-index: 0;
         }
 
-        body::before {
-            top: -120px;
-            right: -80px;
+        body::after {
+            content: "";
+            position: fixed;
+            width: 420px;
+            height: 420px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.18), transparent 65%);
+            right: -160px;
+            bottom: -160px;
+            pointer-events: none;
+            z-index: 0;
         }
 
-        body::after {
-            bottom: -140px;
-            left: -120px;
-            background: radial-gradient(circle, rgba(52, 211, 153, 0.2), transparent 70%);
+        .topbar {
+            max-width: 1100px;
+            margin: 0 auto 24px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+            position: relative;
+            z-index: 1;
+        }
+
+        .topbar-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Sora', sans-serif;
+            font-weight: 700;
+        }
+
+        .topbar-mark {
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #04111b;
+            font-size: 13px;
+        }
+
+        .topbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 13px;
+        }
+
+        .topbar-nav a {
+            text-decoration: none;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .topbar-nav a:hover {
+            color: var(--text);
+        }
+
+        .topbar-cta {
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 13px;
+            color: #04111b;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            box-shadow: 0 12px 22px rgba(14, 165, 233, 0.2);
         }
 
         .container {
@@ -69,7 +140,13 @@
             margin-bottom: 24px;
         }
 
-        h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            font-family: 'Sora', sans-serif;
+        }
+
         .subtle { color: var(--muted); font-size: 14px; }
 
         .actions {
@@ -81,22 +158,25 @@
         button {
             padding: 10px 18px;
             border: none;
-            border-radius: 10px;
-            background: var(--accent);
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
             color: #04111b;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 700;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 12px 22px rgba(14, 165, 233, 0.2);
         }
 
         button:hover {
             transform: translateY(-1px);
-            box-shadow: 0 12px 25px rgba(34, 211, 238, 0.25);
+            box-shadow: 0 18px 30px rgba(14, 165, 233, 0.22);
         }
 
         button.secondary {
-            background: #1d2838;
+            background: rgba(15, 23, 42, 0.06);
             color: var(--text);
+            border: 1px solid var(--border);
+            box-shadow: none;
         }
 
         .grid {
@@ -110,10 +190,16 @@
             border: 1px solid var(--border);
             border-radius: 16px;
             padding: 20px;
-            box-shadow: 0 20px 60px rgba(5, 12, 24, 0.45);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+            animation: fadeUp 0.6s ease both;
         }
 
-        .card h2 { font-size: 18px; margin-bottom: 10px; }
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-family: 'Sora', sans-serif;
+        }
 
         .form-grid {
             display: grid;
@@ -123,25 +209,28 @@
 
         label {
             display: block;
-            font-size: 12px;
+            font-size: 11px;
             color: var(--muted);
             margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
         }
 
         input {
             width: 100%;
             padding: 10px 12px;
-            border-radius: 10px;
+            border-radius: 12px;
             border: 1px solid var(--border);
-            background: var(--panel-2);
+            background: #fff;
             color: var(--text);
-            font-family: 'DM Mono', monospace;
+            font-family: 'Manrope', sans-serif;
+            font-variant-numeric: tabular-nums;
         }
 
         input:focus {
             outline: none;
             border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.2);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.18);
         }
 
         .note {
@@ -170,9 +259,7 @@
             margin-bottom: 4px;
         }
 
-        .summary-item strong {
-            font-size: 16px;
-        }
+        .summary-item strong { font-size: 16px; }
 
         .goal-list {
             display: grid;
@@ -202,16 +289,16 @@
             padding: 4px 10px;
             border-radius: 999px;
             font-size: 12px;
-            font-weight: 600;
-            background: rgba(52, 211, 153, 0.15);
-            color: var(--accent-2);
+            font-weight: 700;
+            background: rgba(20, 184, 166, 0.18);
+            color: #0f172a;
         }
 
         .progress {
             width: 100%;
             height: 10px;
             border-radius: 999px;
-            background: #1b2636;
+            background: #e5edf5;
             overflow: hidden;
         }
 
@@ -230,7 +317,7 @@
         }
 
         .stat {
-            background: #0f1724;
+            background: #fff;
             border: 1px solid var(--border);
             border-radius: 10px;
             padding: 8px 10px;
@@ -253,7 +340,7 @@
         .checkin-item {
             display: flex;
             justify-content: space-between;
-            border-bottom: 1px solid rgba(34, 48, 68, 0.6);
+            border-bottom: 1px solid rgba(15, 23, 42, 0.1);
             padding-bottom: 4px;
         }
 
@@ -276,6 +363,20 @@
     </style>
 </head>
 <body>
+    <header class="topbar">
+        <div class="topbar-brand">
+            <div class="topbar-mark">EF</div>
+            <div>EquiFinance</div>
+        </div>
+        <nav class="topbar-nav">
+            <a href="/static/dashboard.html">Dashboard</a>
+            <a href="/static/savings.html">Metas</a>
+            <a href="/static/simulator.html">Simulador</a>
+            <a href="/static/chatbot.html">Asesor</a>
+        </nav>
+        <a class="topbar-cta" href="/static/dashboard.html">Ir al panel</a>
+    </header>
+
     <div class="container">
         <div class="header">
             <div>
