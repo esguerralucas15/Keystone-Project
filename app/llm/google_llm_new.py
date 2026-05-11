@@ -74,43 +74,57 @@ def construir_input_usuario(data, user_data=None):
 
 
 def construir_contexto_finanzas(finance_data, goals_data=None):
-    if not finance_data:
+    if not finance_data and not goals_data:
         return ""
 
-    monthly_income = finance_data.get("monthly_income", 0)
-    monthly_fixed = finance_data.get("monthly_fixed", 0)
-    monthly_variable = finance_data.get("monthly_variable", 0)
-    monthly_expenses = finance_data.get("monthly_expenses", 0)
-    savings_capacity = finance_data.get("savings_capacity", 0)
-    days_with_records = finance_data.get("days_with_records", 0)
-    last_record_date = finance_data.get("last_record_date") or "N/A"
-    score = finance_data.get("score")
-    score_color = finance_data.get("score_color")
-    has_records = finance_data.get("has_records")
+    lines = []
 
-    goals_lines = ""
+    if finance_data:
+        monthly_income = finance_data.get("monthly_income", 0)
+        monthly_fixed = finance_data.get("monthly_fixed", 0)
+        monthly_variable = finance_data.get("monthly_variable", 0)
+        monthly_expenses = finance_data.get("monthly_expenses", 0)
+        savings_capacity = finance_data.get("savings_capacity", 0)
+        days_with_records = finance_data.get("days_with_records", 0)
+        last_record_date = finance_data.get("last_record_date") or "N/A"
+        score = finance_data.get("score")
+        score_color = finance_data.get("score_color")
+        has_records = finance_data.get("has_records")
+        initial_income = finance_data.get("initial_income")
+        income_changed = finance_data.get("income_changed")
+        income_change = finance_data.get("income_change")
+        income_updated_at = finance_data.get("income_updated_at")
+
+        lines.append("Contexto financiero reciente (ultimos 30 dias):")
+        lines.append(f"Ingreso mensual actual: {monthly_income}")
+        lines.append(f"Gastos fijos: {monthly_fixed}")
+        lines.append(f"Gastos variables: {monthly_variable}")
+        lines.append(f"Gastos totales: {monthly_expenses}")
+        lines.append(f"Capacidad de ahorro: {savings_capacity}")
+        lines.append(f"Dias con registros: {days_with_records}")
+        lines.append(f"Ultimo registro: {last_record_date}")
+        lines.append(f"Score actual: {score} ({score_color})")
+        lines.append(f"Tiene registros: {has_records}")
+
+        if initial_income is not None:
+            lines.append(f"Ingreso mensual inicial (encuesta): {initial_income}")
+        if income_changed is not None:
+            estado = "si" if income_changed else "no"
+            lines.append(f"Cambio de ingreso mensual: {estado}")
+            if income_changed and income_change is not None:
+                lines.append(f"Variacion aproximada: {income_change}")
+        if income_updated_at:
+            lines.append(f"Ultima actualizacion de ingreso: {income_updated_at}")
+
     if goals_data:
-        lines = []
+        lines.append("Metas de ahorro activas:")
         for goal in goals_data[:3]:
             lines.append(
                 f"- {goal.get('title')}: {goal.get('progress', 0):.1f}%"
                 f" (ahorrado {goal.get('total_saved')}, faltante {goal.get('remaining')})"
             )
-        goals_lines = "\nMetas de ahorro activas:\n" + "\n".join(lines)
 
-    return (
-        "Contexto financiero reciente (ultimos 30 dias):\n"
-        f"Ingreso mensual actual: {monthly_income}\n"
-        f"Gastos fijos: {monthly_fixed}\n"
-        f"Gastos variables: {monthly_variable}\n"
-        f"Gastos totales: {monthly_expenses}\n"
-        f"Capacidad de ahorro: {savings_capacity}\n"
-        f"Dias con registros: {days_with_records}\n"
-        f"Ultimo registro: {last_record_date}\n"
-        f"Score actual: {score} ({score_color})\n"
-        f"Tiene registros: {has_records}"
-        f"{goals_lines}"
-    )
+    return "\n".join(lines)
 
 
 def construir_contexto_encuesta(profile_data, user_data=None):

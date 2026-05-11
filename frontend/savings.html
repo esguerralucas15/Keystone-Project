@@ -352,6 +352,11 @@
                 maximumFractionDigits: 0,
             }).format(value || 0);
 
+        const parseMoneyInput = (value) => {
+            const digits = String(value ?? "").replace(/[^0-9]/g, "");
+            return Number(digits) || 0;
+        };
+
         const formatDate = (iso) => {
             if (!iso) return "-";
             const date = new Date(iso);

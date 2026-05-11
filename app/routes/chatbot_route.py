@@ -9,6 +9,7 @@ from app.models.conversation_model import ConversationMessage, ConversationSessi
 from app.models.finance_model import FinanceProfile, DailyRecord, SavingsGoal, SavingsCheckin
 from app.llm.google_llm_new import procesar_mensaje_chatbot, generar_recomendacion_inicial
 from datetime import datetime, date, timedelta
+import re
 
 router = APIRouter()
 
@@ -97,6 +98,28 @@ def _compute_score(monthly_income: float, fixed_expenses: float, variable_expens
     return score, color
 
 
+def _extract_income_hint(profile: UserProfile | None):
+    if not profile or not profile.q16:
+        return None
+
+    digits = re.sub(r"[^0-9]", "", str(profile.q16))
+    if not digits:
+        return None
+    try:
+        return float(digits)
+    except ValueError:
+        return None
+
+
+def _compute_income_change(initial_income: float | None, current_income: float | None):
+    if initial_income is None or current_income is None:
+        return None, None
+
+    change = current_income - initial_income
+    changed = abs(change) >= 1
+    return changed, change
+
+
 @router.post("/message")
 def chatbot_message(payload: dict, db: Session = Depends(get_db)):
     """
@@ -139,6 +162,8 @@ def chatbot_message(payload: dict, db: Session = Depends(get_db)):
             if c.name not in ("id", "user_id")
         }
 
+    initial_income = _extract_income_hint(profile)
+
     try:
         # Obtener finanzas recientes (ingreso mensual y gastos diarios)
         finance_profile = db.query(FinanceProfile).filter(FinanceProfile.user_id == user_id).first()
@@ -168,6 +193,11 @@ def chatbot_message(payload: dict, db: Session = Depends(get_db)):
                 score, color = 100, "green"
                 has_records = False
 
+            income_changed, income_change = _compute_income_change(
+                initial_income,
+                finance_profile.monthly_income,
+            )
+
             finance_data = {
                 "monthly_income": finance_profile.monthly_income,
                 "monthly_fixed": monthly_fixed,
@@ -179,6 +209,10 @@ def chatbot_message(payload: dict, db: Session = Depends(get_db)):
                 "score": score,
                 "score_color": color,
                 "has_records": has_records,
+                "initial_income": initial_income,
+                "income_changed": income_changed,
+                "income_change": income_change,
+                "income_updated_at": finance_profile.updated_at.isoformat() if finance_profile.updated_at else None,
             }
 
         # Metas de ahorro
