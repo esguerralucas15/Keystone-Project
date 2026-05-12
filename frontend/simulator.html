@@ -114,6 +114,30 @@
       box-shadow: 0 12px 22px rgba(14, 165, 233, 0.2);
     }
 
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .topbar-logout {
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      background: rgba(239, 68, 68, 0.12);
+      color: #b91c1c;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      box-shadow: none;
+      margin-top: 0;
+    }
+
+    .topbar-logout:hover {
+      transform: translateY(-1px);
+    }
+
     .container { 
       max-width: 980px; 
       margin: 0 auto; 
@@ -368,12 +392,14 @@
       <div>EquiFinance</div>
     </div>
     <nav class="topbar-nav">
-      <a href="/static/dashboard.html">Dashboard</a>
-      <a href="/static/savings.html">Metas</a>
-      <a href="/static/simulator.html">Simulador</a>
-      <a href="/static/chatbot.html">Asesor</a>
+      <a href="/static/dashboard.html">Resumen</a>
+      <a href="/static/savings.html">Metas de ahorro</a>
+      <a href="/static/simulator.html">Simulador de credito</a>
+      <a href="/static/chatbot.html">Asesor financiero</a>
     </nav>
-    <a class="topbar-cta" href="/static/dashboard.html">Ir al panel</a>
+    <div class="topbar-actions">
+      <button class="topbar-logout" type="button" onclick="logout()">Cerrar sesion</button>
+    </div>
   </header>
 
   <div class="container">
@@ -558,6 +584,11 @@
   <script>
     const user = JSON.parse(localStorage.getItem("user"));
     if (!user) {
+      window.location.href = "/static/index.html";
+    }
+
+    function logout() {
+      localStorage.removeItem("user");
       window.location.href = "/static/index.html";
     }
 

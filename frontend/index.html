@@ -99,24 +99,6 @@
             font-size: 13px;
         }
 
-        .topbar-nav {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            flex-wrap: wrap;
-            font-size: 13px;
-        }
-
-        .topbar-nav a {
-            text-decoration: none;
-            color: var(--muted);
-            font-weight: 600;
-        }
-
-        .topbar-nav a:hover {
-            color: var(--text);
-        }
-
         .topbar-cta {
             text-decoration: none;
             padding: 10px 16px;
@@ -145,27 +127,6 @@
             gap: 16px;
         }
 
-        .brand {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 700;
-            font-family: 'Sora', sans-serif;
-            letter-spacing: -0.01em;
-        }
-
-        .brand-mark {
-            width: 36px;
-            height: 36px;
-            border-radius: 12px;
-            display: grid;
-            place-items: center;
-            color: #04111b;
-            background: linear-gradient(135deg, var(--accent), var(--accent-2));
-            font-size: 14px;
-            font-weight: 700;
-        }
-
         .hero h1 {
             font-family: 'Sora', sans-serif;
             font-size: 40px;
@@ -178,33 +139,6 @@
             color: var(--muted);
             font-size: 16px;
             max-width: 440px;
-        }
-
-        .hero-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 4px;
-        }
-
-        .hero-actions a {
-            text-decoration: none;
-            padding: 10px 16px;
-            border-radius: 999px;
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        .hero-actions .primary-link {
-            background: linear-gradient(135deg, var(--accent), var(--accent-2));
-            color: #04111b;
-            box-shadow: 0 12px 22px rgba(14, 165, 233, 0.2);
-        }
-
-        .hero-actions .ghost-link {
-            border: 1px solid var(--border);
-            color: var(--text);
-            background: rgba(255, 255, 255, 0.6);
         }
 
         .hero-grid {
@@ -398,37 +332,25 @@
             <div class="topbar-mark">EF</div>
             <div>EquiFinance</div>
         </div>
-        <nav class="topbar-nav">
-            <a href="/static/index.html">Inicio</a>
-            <a href="/static/register.html">Registro</a>
-        </nav>
         <a class="topbar-cta" href="/static/register.html">Crear cuenta</a>
     </header>
 
     <div class="layout">
         <section class="hero">
-            <div class="brand">
-                <div class="brand-mark">EF</div>
-                <div>EquiFinance</div>
-            </div>
             <h1>Domina tu futuro financiero</h1>
             <p>Asesoria personalizada, metas claras y seguimiento diario para tomar mejores decisiones financieras.</p>
-            <div class="hero-actions">
-                <a class="primary-link" href="/static/register.html">Comenzar ahora</a>
-                <a class="ghost-link" href="/static/register.html">Crear cuenta</a>
-            </div>
             <div class="hero-grid">
                 <div class="hero-card">
-                    <span>Usuarios activos</span>
-                    <strong>12.4k+</strong>
+                    <span>Metas claras</span>
+                    <strong>Plan de metas</strong>
                 </div>
                 <div class="hero-card">
-                    <span>Planes guiados</span>
-                    <strong>98%</strong>
+                    <span>Seguimiento</span>
+                    <strong>Seguimiento del progreso</strong>
                 </div>
                 <div class="hero-card">
-                    <span>Score en vivo</span>
-                    <strong>24/7</strong>
+                    <span>Score financiero</span>
+                    <strong>En tiempo real</strong>
                 </div>
             </div>
         </section>

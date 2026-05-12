@@ -63,70 +63,6 @@
             z-index: 0;
         }
 
-        .topbar {
-            max-width: 860px;
-            margin: 0 auto 22px;
-            padding: 14px 18px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.85);
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(12px);
-            position: relative;
-            z-index: 1;
-        }
-
-        .topbar-brand {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            font-family: 'Sora', sans-serif;
-            font-weight: 700;
-        }
-
-        .topbar-mark {
-            width: 34px;
-            height: 34px;
-            border-radius: 12px;
-            display: grid;
-            place-items: center;
-            background: linear-gradient(135deg, var(--accent), var(--accent-2));
-            color: #04111b;
-            font-size: 13px;
-        }
-
-        .topbar-nav {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            flex-wrap: wrap;
-            font-size: 13px;
-        }
-
-        .topbar-nav a {
-            text-decoration: none;
-            color: var(--muted);
-            font-weight: 600;
-        }
-
-        .topbar-nav a:hover {
-            color: var(--text);
-        }
-
-        .topbar-cta {
-            text-decoration: none;
-            padding: 10px 16px;
-            border-radius: 999px;
-            font-weight: 700;
-            font-size: 13px;
-            color: #04111b;
-            background: linear-gradient(135deg, var(--accent), var(--accent-2));
-            box-shadow: 0 12px 22px rgba(14, 165, 233, 0.2);
-        }
 
         .header {
             display: flex;
@@ -335,20 +271,6 @@
 </head>
 
 <body>
-    <header class="topbar">
-        <div class="topbar-brand">
-            <div class="topbar-mark">EF</div>
-            <div>EquiFinance</div>
-        </div>
-        <nav class="topbar-nav">
-            <a href="/static/dashboard.html">Dashboard</a>
-            <a href="/static/savings.html">Metas</a>
-            <a href="/static/simulator.html">Simulador</a>
-            <a href="/static/chatbot.html">Asesor</a>
-        </nav>
-        <a class="topbar-cta" href="/static/dashboard.html">Ir al panel</a>
-    </header>
-
     <div class="header">
         <button onclick="window.location.href='/static/dashboard.html'" title="Volver">←</button>
         <h1>📝 Encuesta Financiera</h1>

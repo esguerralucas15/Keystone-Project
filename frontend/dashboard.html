@@ -127,6 +127,30 @@
             box-shadow: 0 12px 22px rgba(14, 165, 233, 0.2);
         }
 
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .topbar-logout {
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            background: rgba(239, 68, 68, 0.12);
+            color: #b91c1c;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            box-shadow: none;
+            margin-top: 0;
+        }
+
+        .topbar-logout:hover {
+            transform: translateY(-1px);
+        }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -142,6 +166,20 @@
             margin-bottom: 18px;
         }
 
+        .page-intro {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .kicker {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
         h1 {
             font-size: 28px;
             font-weight: 700;
@@ -150,12 +188,6 @@
         }
 
         .subtle { color: var(--muted); font-size: 14px; }
-
-        .actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
 
         button {
             padding: 10px 18px;
@@ -194,7 +226,7 @@
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 16px;
+            gap: 18px;
         }
 
         .card {
@@ -205,6 +237,12 @@
             box-shadow: var(--shadow);
             backdrop-filter: blur(12px);
             animation: floatIn 0.5s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 24px 48px rgba(15, 23, 42, 0.12);
         }
 
         .card h2 {
@@ -338,9 +376,14 @@
 
         .table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             margin-top: 12px;
             font-size: 13px;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
         }
 
         .table th, .table td {
@@ -349,11 +392,19 @@
             border-bottom: 1px solid var(--border);
         }
 
-        .table th { color: var(--muted); font-weight: 600; }
+        .table th {
+            color: var(--muted);
+            font-weight: 600;
+            background: rgba(14, 165, 233, 0.08);
+        }
+
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
 
         .note {
-            background: rgba(14, 165, 233, 0.1);
-            border: 1px solid rgba(14, 165, 233, 0.25);
+            background: rgba(14, 165, 233, 0.08);
+            border: 1px solid rgba(14, 165, 233, 0.2);
             border-radius: 12px;
             padding: 10px 12px;
             color: var(--muted);
@@ -380,32 +431,29 @@
             <div>EquiFinance</div>
         </div>
         <nav class="topbar-nav">
-            <a href="/static/dashboard.html">Dashboard</a>
-            <a href="/static/savings.html">Metas</a>
-            <a href="/static/simulator.html">Simulador</a>
-            <a href="/static/chatbot.html">Asesor</a>
+            <a href="/static/dashboard.html">Resumen</a>
+            <a href="/static/savings.html">Metas de ahorro</a>
+            <a href="/static/simulator.html">Simulador de credito</a>
+            <a href="/static/chatbot.html">Asesor financiero</a>
         </nav>
-        <a class="topbar-cta" href="/static/chatbot.html">Hablar con asesor</a>
+        <div class="topbar-actions">
+            <button class="topbar-logout" type="button" onclick="logout()">Cerrar sesion</button>
+        </div>
     </header>
 
     <div class="container">
         <div class="header">
-            <div>
-                <h1>Bienvenido <span id="username"></span></h1>
-                <div class="subtle">Registro activo de ingresos y gastos para tu estabilidad financiera.</div>
-            </div>
-            <div class="actions">
-                <button class="secondary" onclick="irAlChatbot()">Asesor financiero</button>
-                <button class="secondary" onclick="irAlSimulador()">Simulador de credito</button>
-                <button class="secondary" onclick="irAMetas()">Metas de ahorro</button>
-                <button class="danger" onclick="logout()">Cerrar sesion</button>
+            <div class="page-intro">
+                <div class="kicker">Panel financiero</div>
+                <h1>Bienvenido/a</h1>
+                <div class="subtle">Resumen general de ingresos, gastos y score financiero.</div>
             </div>
         </div>
 
         <div class="grid">
             <div class="card" id="profileCard">
                 <h2>Ingreso mensual</h2>
-                <div class="note" id="profileNote">Para continuar necesitamos tu ingreso mensual.</div>
+                <div class="note" id="profileNote">Ingresa tu ingreso mensual para activar el score y recomendaciones.</div>
                 <div id="profileSummary" class="hidden">
                     <div class="summary-grid">
                         <div class="summary-item">
@@ -471,7 +519,7 @@
         <div class="grid" style="margin-top: 16px;">
             <div class="card">
                 <h2>Registro diario</h2>
-                <div class="note">Registra tu gasto diario y en que lo realizaste.</div>
+                <div class="note">Registra tus gastos diarios y clasificalos para mejorar el seguimiento.</div>
                 <form id="dailyForm">
                     <div class="form-grid">
                         <div>
@@ -528,8 +576,6 @@
         if (!user) {
             window.location.href = "/static/index.html";
         }
-
-        document.getElementById("username").innerText = user.name || "Usuario";
 
         document.getElementById("dailyDate").valueAsDate = new Date();
 
